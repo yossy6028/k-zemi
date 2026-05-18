@@ -117,5 +117,6 @@ collections:
           - bulleted-list
           - numbered-list
           - link
+          - image
         editor_components:
           - image

@@ -50,9 +50,11 @@ def parse_frontmatter(text):
 
 
 def inline(text):
-    """**bold** ==marker== [text](url) を変換。HTMLエスケープは行わない（既存HTML対応）"""
+    """**bold** ==marker== [text](url) ![alt](img) を変換。HTMLエスケープは行わない（既存HTML対応）"""
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
     text = re.sub(r'==(.+?)==', r'<span class="marker">\1</span>', text)
+    # 画像（リンクより前に処理。!付きパターンが先にマッチするため）
+    text = re.sub(r'!\[(.*?)\]\((.+?)\)', r'<img src="\2" alt="\1" loading="lazy" class="post-img">', text)
     text = re.sub(r'\[(.+?)\]\((.+?)\)', r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
     return text
 
@@ -171,6 +173,7 @@ def common_css():
 html{{scroll-behavior:smooth}}
 body{{font-family:'Noto Sans JP',sans-serif;color:#2D3748;background:#fff;line-height:1.8;-webkit-font-smoothing:antialiased;overflow-x:hidden}}
 img{{max-width:100%;height:auto;display:block}}
+.post-img{{max-width:100%;height:auto;display:block;margin:32px auto;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.08)}}
 a{{color:inherit;text-decoration:none}}
 ul,ol{{list-style:none}}
 
