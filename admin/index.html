@@ -6,12 +6,16 @@
   <meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app" />
   <title>Kゼミ ブログ管理画面</title>
   <link rel="icon" href="../images/favicon.png" />
+  <script>
+    // Identity widget を Decap CMS より前に明示的に初期化
+    window.netlifyIdentityAPIUrl = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+  </script>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-</head>
-<body>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script>
     if (window.netlifyIdentity) {
+      window.netlifyIdentity.init({
+        APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
+      });
       window.netlifyIdentity.on("init", user => {
         if (!user) {
           window.netlifyIdentity.on("login", () => {
@@ -21,5 +25,8 @@
       });
     }
   </script>
+</head>
+<body>
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
