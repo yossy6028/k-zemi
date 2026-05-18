@@ -1,0 +1,121 @@
+backend:
+  name: git-gateway
+  branch: main
+  commit_messages:
+    create: "ブログ記事を作成しました: {{slug}}"
+    update: "ブログ記事を更新しました: {{slug}}"
+    delete: "ブログ記事を削除しました: {{slug}}"
+    uploadMedia: "画像をアップロードしました: {{path}}"
+    deleteMedia: "画像を削除しました: {{path}}"
+
+# 公開済みワークフロー（保存=公開）。「公開前にレビュー」したい場合は editorial_workflow に変更
+publish_mode: simple
+
+# Decap CMS がアップロードする画像の保存先
+media_folder: "images/uploaded"
+public_folder: "/images/uploaded"
+
+# 日本語UI（Decap CMSは英語ベースだが、フィールドラベルを日本語化）
+locale: 'ja'
+
+# サイト本体のURL（ヘッダーから「サイトを表示」リンク用）
+site_url: https://k-zemi.net/
+display_url: https://k-zemi.net/
+logo_url: https://k-zemi.net/images/favicon.png
+
+collections:
+  - name: "posts"
+    label: "ブログ記事"
+    label_singular: "記事"
+    folder: "posts"
+    create: true
+    delete: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    summary: "{{date}} | {{category}} | {{title}}"
+    sortable_fields: ['date', 'title']
+    view_filters:
+      - label: "お知らせのみ"
+        field: category
+        pattern: "お知らせ"
+      - label: "学習コラムのみ"
+        field: category
+        pattern: "学習コラム"
+    editor:
+      preview: true
+    fields:
+      - label: "記事タイトル"
+        name: "title"
+        widget: "string"
+        hint: "ブログ一覧やSNSシェア時に表示される見出しです。25文字前後を推奨。"
+
+      - label: "URL用ID（slug）"
+        name: "slug"
+        widget: "string"
+        hint: "URLの一部になる英字。半角英数字とハイフンのみ。例: summer-2026, exam-prep。記事ごとに重複しない名前にしてください。"
+        pattern: ['^[a-z0-9-]+$', '半角小文字英数字とハイフンのみ使えます']
+
+      - label: "カテゴリ"
+        name: "category"
+        widget: "select"
+        options:
+          - "お知らせ"
+          - "学習コラム"
+          - "受験情報"
+          - "イベント"
+        default: "お知らせ"
+        hint: "記事の種類を選んでください。"
+
+      - label: "カテゴリ色"
+        name: "category_color"
+        widget: "select"
+        options:
+          - { label: "金（お知らせ向き）", value: "#C9A227" }
+          - { label: "緑（学習コラム向き）", value: "#1B5E20" }
+          - { label: "茶（受験情報向き）", value: "#5D4037" }
+          - { label: "紺（イベント向き）", value: "#1A237E" }
+        default: "#C9A227"
+
+      - label: "公開日"
+        name: "date"
+        widget: "string"
+        hint: "ブログに表示する日付。例: 2026年6月1日"
+        default: ""
+
+      - label: "読了時間"
+        name: "read_time"
+        widget: "string"
+        default: "約5分"
+        hint: "目安の読了時間。例: 約5分"
+
+      - label: "サムネイル用ラベル"
+        name: "hero_label"
+        widget: "string"
+        default: "新着"
+        hint: "ブログ一覧カードに大きく表示される短いラベル（5文字程度）。例: 新着、夏期講習、合格速報"
+
+      - label: "タグ（カンマ区切り）"
+        name: "tags"
+        widget: "string"
+        required: false
+        default: ""
+        hint: "例: 中学受験, 夏期講習, 学習法"
+
+      - label: "記事本文（Markdown）"
+        name: "body"
+        widget: "markdown"
+        hint: |
+          見出しは ## または ###、太字は **テキスト**、ハイライトは ==テキスト== です。
+          ::: callout タイトル ～ ::: で番号付き手順ボックスが作れます。
+        buttons:
+          - bold
+          - italic
+          - heading-two
+          - heading-three
+          - quote
+          - bulleted-list
+          - numbered-list
+          - link
+        editor_components:
+          - image

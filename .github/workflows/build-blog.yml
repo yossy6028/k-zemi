@@ -1,0 +1,57 @@
+name: Build Kzemi Blog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'posts/**'
+      - 'images/**'
+      - 'build_blog.py'
+      - '.github/workflows/build-blog.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: build-blog
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Build blog
+        run: |
+          python3 build_blog.py
+          echo "=== generated ==="
+          ls -la dist/blog/ || true
+
+      - name: Sync dist/blog -> blog
+        run: |
+          rm -rf blog
+          cp -R dist/blog blog
+          rm -rf dist
+
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -z "$(git status --porcelain blog)" ]]; then
+            echo "変更なし。スキップ。"
+            exit 0
+          fi
+          git add blog
+          git commit -m "Kゼミ ブログ自動ビルド ($(date '+%Y-%m-%d %H:%M JST'))"
+          git push
