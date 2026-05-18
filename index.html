@@ -698,5 +698,21 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   });
 });
 </script>
+<!-- Netlify Identity widget: 招待リンク/メール確認リンクをルートで受け、/admin/ にリダイレクト -->
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script>
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.init({
+      APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
+    });
+    window.netlifyIdentity.on("init", user => {
+      if (!user) {
+        window.netlifyIdentity.on("login", () => {
+          document.location.href = "/admin/";
+        });
+      }
+    });
+  }
+</script>
 </body>
 </html>
