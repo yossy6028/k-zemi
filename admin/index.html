@@ -7,6 +7,11 @@
   <title>Kゼミ ブログ管理画面</title>
   <link rel="icon" href="../images/favicon.png" />
   <script>
+    // Decap CMS の git-gateway backend に Netlify サイトURLを伝える
+    // CMS は localStorage.netlifySiteURL を読んで /.netlify/identity と /.netlify/git/github のオリジンを上書きする
+    try {
+      localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
+    } catch (e) { /* localStorage 利用不可環境ではフォールバック不要 */ }
     // Identity widget を Decap CMS より前に明示的に初期化
     window.netlifyIdentityAPIUrl = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
   </script>
