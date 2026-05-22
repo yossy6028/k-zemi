@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app">
+  <title>Kゼミ ブログ管理画面 ログイン</title>
+  <link rel="icon" href="/images/favicon.png">
+  <script>
+    try {
+      localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
+    } catch (e) {}
+    window.netlifyIdentityAPIUrl = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+  </script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        if (user) {
+          // 既にログイン済みなら admin/ にリダイレクト
+          document.location.href = "/admin/";
+          return;
+        }
+        // login イベント（パスワード設定/ログイン成功）→ admin/ に遷移
+        window.netlifyIdentity.on("login", () => {
+          document.location.href = "/admin/";
+        });
+        // 招待/メール確認/パスワードリセットトークンがあれば自動でモーダル
+        var hash = location.hash;
+        if (hash.indexOf('invite_token=') !== -1 || hash.indexOf('confirmation_token=') !== -1 || hash.indexOf('recovery_token=') !== -1) {
+          window.netlifyIdentity.open();
+        }
+      });
+      window.netlifyIdentity.init({
+        APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
+      });
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #E8F5E9 0%, #ffffff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.7;
+      color: #2D3748;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+      max-width: 560px;
+      width: 100%;
+      padding: 48px 40px;
+      text-align: center;
+    }
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      color: #0D3311;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      color: #718096;
+      font-size: 1rem;
+      margin-bottom: 36px;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: #1B5E20;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.15rem;
+      padding: 18px 36px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 24px rgba(27, 94, 32, 0.25);
+    }
+    .btn-primary:hover {
+      background: #0D3311;
+      transform: translateY(-2px);
+    }
+    .help {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #E2E8F0;
+      font-size: 0.88rem;
+      color: #718096;
+      text-align: left;
+    }
+    .help strong { color: #0D3311; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Kゼミ ブログ管理画面</h1>
+    <p class="subtitle">招待メールのリンクから来た方は<br>パスワード設定画面が自動的に開きます</p>
+
+    <button class="btn-primary" onclick="window.netlifyIdentity.open()">ログイン / パスワード設定</button>
+
+    <div class="help">
+      <strong>📌 ご利用方法</strong><br>
+      ・初回: 招待メールのリンクから来てパスワードを設定<br>
+      ・2回目以降: 上のボタンを押してメール+パスワードでログイン<br>
+      ・うまく開かない場合はシークレットウィンドウでお試しください
+    </div>
+  </main>
+</body>
+</html>
