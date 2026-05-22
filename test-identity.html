@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app">
+  <title>Identity widget 動作テスト（一時ページ）</title>
+  <script>
+    try {
+      localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
+    } catch (e) {}
+    window.netlifyIdentityAPIUrl = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+  </script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        var hash = location.hash;
+        if (hash.indexOf('invite_token=') !== -1 || hash.indexOf('confirmation_token=') !== -1 || hash.indexOf('recovery_token=') !== -1) {
+          window.netlifyIdentity.open();
+        }
+      });
+      window.netlifyIdentity.init({
+        APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
+      });
+    }
+  </script>
+  <style>
+    body { font-family: sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+    h1 { color: #1B5E20; }
+    p { color: #555; }
+    button { padding: 12px 24px; background: #1B5E20; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #0D3311; }
+  </style>
+</head>
+<body>
+  <h1>Identity widget 動作テスト</h1>
+  <p>このページは Netlify Identity widget の動作確認用です（一時ページ・本番非公開）。</p>
+  <p>URL の末尾に <code>#invite_token=xxx</code> を付けてアクセスすると、widget が招待モーダルを開きます。</p>
+  <button onclick="window.netlifyIdentity.open()">ログインモーダルを開く</button>
+</body>
+</html>
