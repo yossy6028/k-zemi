@@ -18,15 +18,16 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     if (window.netlifyIdentity) {
-      window.netlifyIdentity.init({
-        APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
-      });
+      // ハンドラは init() より先に登録（順序を逆にすると init イベントを取りこぼす）
       window.netlifyIdentity.on("init", user => {
         if (!user) {
           window.netlifyIdentity.on("login", () => {
             document.location.href = "/admin/";
           });
         }
+      });
+      window.netlifyIdentity.init({
+        APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
       });
     }
   </script>
