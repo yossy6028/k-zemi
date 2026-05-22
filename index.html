@@ -349,6 +349,10 @@ footer p{font-size:.85rem;opacity:.6;margin-top:8px}
 /* Animations */
 [data-animate]{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
 [data-animate].visible{opacity:1;transform:translateY(0)}
+
+/* Netlify Identity widget: デフォルト z-index:99 がヘッダー(1000)等の背面に隠れるため上書き */
+.netlify-identity-widget,
+#netlify-identity-widget{z-index:99999 !important}
 </style>
 </head>
 <body>
