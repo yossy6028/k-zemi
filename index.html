@@ -721,13 +721,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
           document.location.href = "/admin/";
         });
       }
-      // invite/confirmation/recovery トークンがあれば明示的にモーダルを開く
-      var hash = location.hash;
-      if (hash.indexOf('invite_token=') !== -1 || hash.indexOf('confirmation_token=') !== -1 || hash.indexOf('recovery_token=') !== -1) {
-        window.netlifyIdentity.open();
-      }
     });
-    // 明示的に Netlify本体の Identity endpoint を指定して初期化
+    // hash に invite_token / confirmation_token / recovery_token があれば widget が自動でモーダルを開いて処理する
+    // 自前で .open() を呼ぶと auto-handling と衝突して accept API 呼出が走らなくなるため呼ばない
     window.netlifyIdentity.init({
       APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
     });
