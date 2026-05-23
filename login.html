@@ -7,10 +7,11 @@
   <meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app">
   <title>Kゼミ ブログ管理画面 ログイン</title>
   <link rel="icon" href="/images/favicon.png">
+  <!-- 🚨 widget script は使わない (overlay がクリックを intercept する不具合のため)
+       全API を直接 fetch する独自実装 -->
   <script>
     try { localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/'); } catch (e) {}
   </script>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -83,21 +84,41 @@
       alertBox.innerHTML = '';
 
       try {
-        // widget gotrue が準備できるまで待つ
-        const waitForGotrue = () => new Promise((resolve, reject) => {
-          let attempts = 0;
-          const check = () => {
-            if (window.netlifyIdentity && window.netlifyIdentity.gotrue) {
-              resolve(window.netlifyIdentity.gotrue);
-            } else if (attempts++ > 50) reject(new Error('widget timeout'));
-            else setTimeout(check, 100);
-          };
-          check();
+        // /token API で直接ログイン (widget 不要)
+        const tokenRes = await fetch(IDENTITY_BASE + '/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=password&username=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password)
         });
-        const gotrue = await waitForGotrue();
-        // apiURL 強制上書き (widget の autoInit は相対パスにする不具合)
-        gotrue.api.apiURL = IDENTITY_BASE;
-        await gotrue.login(email, password, true);
+        const tokenData = await tokenRes.json();
+        if (!tokenRes.ok) {
+          throw new Error(tokenData.error_description || tokenData.msg || 'ログイン失敗');
+        }
+        // /user でアカウント情報取得
+        const userRes = await fetch(IDENTITY_BASE + '/user', {
+          headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
+        });
+        const user = await userRes.json();
+        // gotrue 互換 localStorage 構築
+        const session = {
+          url: IDENTITY_BASE,
+          token: {
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            expires_at: Date.now() + (tokenData.expires_in || 3600) * 1000,
+            token_type: tokenData.token_type || 'bearer'
+          },
+          id: user.id || '',
+          aud: user.aud || '',
+          role: user.role || '',
+          email: user.email || email,
+          confirmed_at: user.confirmed_at,
+          app_metadata: user.app_metadata || {},
+          user_metadata: user.user_metadata || {},
+          created_at: user.created_at,
+          updated_at: user.updated_at
+        };
+        localStorage.setItem('gotrue.user', JSON.stringify(session));
         alertBox.innerHTML = '<div class="alert alert-success">✅ ログイン成功！投稿画面に移動します...</div>';
         setTimeout(() => { location.href = '/post.html'; }, 800);
       } catch (err) {

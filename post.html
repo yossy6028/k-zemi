@@ -86,16 +86,19 @@
     .alert-success { background: #C6F6D5; color: #22543D; border: 1px solid #68D391; }
     .alert-info { background: #BEE3F8; color: #2C5282; border: 1px solid #63B3ED; }
     .login-card { text-align: center; }
-    .login-card a {
+    /* ボタンとして見せたいのは .login-card-btn のみ。<p> 内の <a> は通常リンク */
+    .login-card .login-card-btn {
       display: inline-block;
       padding: 14px 28px;
       background: #1B5E20;
-      color: white;
+      color: white !important;
       text-decoration: none;
       border-radius: 8px;
       margin-top: 16px;
       font-weight: 700;
     }
+    .login-card .login-card-btn:hover { background: #0D3311; }
+    .login-card p a { color: #1B5E20; text-decoration: underline; }
     .markdown-help {
       background: #F7FAFC;
       border-left: 4px solid #C9A227;
@@ -115,8 +118,8 @@
     <div id="loginView" class="card login-card" style="display:none">
       <h1 style="font-size:1.4rem;color:#0D3311;margin-bottom:8px">ログインが必要です</h1>
       <p style="color:#718096;margin-bottom:8px">記事投稿には Kゼミ ブログ管理画面のアカウントでログインしてください。</p>
-      <a href="/login.html">ログイン（メール+パスワード）</a>
-      <p style="margin-top:16px;font-size:0.82rem;color:#A0AEC0">初回の方は <a href="/signup.html" style="color:#1B5E20">招待メールのリンクから設定</a></p>
+      <a href="/login.html" class="login-card-btn">ログイン（メール+パスワード）</a>
+      <p style="margin-top:16px;font-size:0.82rem;color:#718096">初回の方は <a href="/signup.html">招待メールのリンクから設定</a></p>
     </div>
 
     <!-- ログイン済み時 -->

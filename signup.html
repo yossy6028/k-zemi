@@ -8,6 +8,16 @@
   <title>Kゼミ ブログ管理画面 パスワード設定</title>
   <link rel="icon" href="/images/favicon.png">
   <style>
+    /* 🚨 Netlify Identity widget の overlay がクリックを intercept する不具合への対策。
+       widget の login API は内部で使うが UI は表示しないため強制非表示+クリック透過 */
+    .netlify-identity-widget,
+    #netlify-identity-widget,
+    iframe[src="about:blank"] {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      z-index: -1 !important;
+    }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Noto Sans JP', -apple-system, sans-serif;
@@ -126,37 +136,26 @@
     </div>
   </main>
 
-  <!-- 重要: widget script 読込前に hash の token を変数に保存（widgetがhashを即消費するため） -->
-  <script>
-    (function(){
-      const hash = location.hash || '';
-      const inviteMatch = hash.match(/invite_token=([^&]+)/);
-      const recoveryMatch = hash.match(/recovery_token=([^&]+)/);
-      window.__savedToken = inviteMatch ? inviteMatch[1] : (recoveryMatch ? recoveryMatch[1] : null);
-      window.__isRecovery = !!recoveryMatch;
-    })();
-    try {
-      localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
-    } catch (e) {}
-  </script>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <!-- 🚨 widget script は使わない (overlay がクリックを intercept する不具合のため)
+       全API を直接 fetch + localStorage を手動構築する独自実装に統一 -->
   <script>
     const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
 
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        if (user) {
-          location.href = "/post.html";
-        }
-      });
-      window.netlifyIdentity.init({
-        APIUrl: IDENTITY_BASE
-      });
-    }
+    // hash から token を即取り出して保存（一度しかこの瞬間が存在しない）
+    const __hashInitial = location.hash || '';
+    const __inviteMatch = __hashInitial.match(/invite_token=([^&]+)/);
+    const __recoveryMatch = __hashInitial.match(/recovery_token=([^&]+)/);
+    const token = __inviteMatch ? __inviteMatch[1] : (__recoveryMatch ? __recoveryMatch[1] : null);
+    const isRecovery = !!__recoveryMatch;
+    try { localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/'); } catch (e) {}
 
-    // widget 読込前に保存した token を使う
-    const token = window.__savedToken;
-    const isRecovery = window.__isRecovery;
+    // 既にログイン済みなら /post.html に直行
+    try {
+      const existing = JSON.parse(localStorage.getItem('gotrue.user') || 'null');
+      if (existing && existing.token && existing.token.access_token) {
+        location.replace('/post.html');
+      }
+    } catch (e) {}
 
     if (!token) {
       document.getElementById('noTokenView').style.display = 'block';
@@ -206,33 +205,34 @@
           }
         }
 
-        // Step 2: メールアドレス取得（widget.login に必要）
+        // Step 2: メールアドレス取得 + Step 3: localStorage を手動構築 (widget 不要)
         const userRes = await fetch(IDENTITY_BASE + '/user', {
           headers: { 'Authorization': 'Bearer ' + verifyData.access_token }
         });
         const user = await userRes.json();
         document.getElementById('emailDisplay').textContent = user.email || '';
 
-        // Step 3: widget の gotrue.login() で正規ログイン（内部で正しい形式の localStorage を作る）
-        // 手動 localStorage 書き込みでは widget の validation で弾かれるため必須
-        const waitForGotrue = () => new Promise((resolve, reject) => {
-          let attempts = 0;
-          const check = () => {
-            if (window.netlifyIdentity && window.netlifyIdentity.gotrue) {
-              resolve(window.netlifyIdentity.gotrue);
-            } else if (attempts++ > 50) {
-              reject(new Error('Identity widget timeout'));
-            } else {
-              setTimeout(check, 100);
-            }
-          };
-          check();
-        });
-        const gotrue = await waitForGotrue();
-        // widget の autoInit が apiURL を相対パス '/.netlify/identity' で初期化する不具合に対する強制上書き
-        // (init({APIUrl}) も metaタグも widget の autoInit を上書きできない為)
-        gotrue.api.apiURL = IDENTITY_BASE;
-        await gotrue.login(user.email, password, true);
+        // gotrue-js 互換形式で localStorage 'gotrue.user' に保存
+        // post.html / login.html は access_token しか使わないので形式は緩めでOK
+        const session = {
+          url: IDENTITY_BASE,
+          token: {
+            access_token: verifyData.access_token,
+            refresh_token: verifyData.refresh_token,
+            expires_at: Date.now() + (verifyData.expires_in || 3600) * 1000,
+            token_type: verifyData.token_type || 'bearer'
+          },
+          id: user.id || '',
+          aud: user.aud || '',
+          role: user.role || '',
+          email: user.email || '',
+          confirmed_at: user.confirmed_at,
+          app_metadata: user.app_metadata || {},
+          user_metadata: user.user_metadata || {},
+          created_at: user.created_at,
+          updated_at: user.updated_at
+        };
+        localStorage.setItem('gotrue.user', JSON.stringify(session));
 
         alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
         setTimeout(() => { location.href = '/post.html'; }, 1200);
