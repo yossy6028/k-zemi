@@ -125,8 +125,15 @@
     </div>
   </main>
 
-  <!-- Netlify Identity widget をライブラリとして読み込み（UIは使わない） -->
+  <!-- 重要: widget script 読込前に hash の token を変数に保存（widgetがhashを即消費するため） -->
   <script>
+    (function(){
+      const hash = location.hash || '';
+      const inviteMatch = hash.match(/invite_token=([^&]+)/);
+      const recoveryMatch = hash.match(/recovery_token=([^&]+)/);
+      window.__savedToken = inviteMatch ? inviteMatch[1] : (recoveryMatch ? recoveryMatch[1] : null);
+      window.__isRecovery = !!recoveryMatch;
+    })();
     try {
       localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
     } catch (e) {}
@@ -135,11 +142,9 @@
   <script>
     const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
 
-    // widget の init() で APIUrl を明示（hash処理せず、UI も表示しない方向）
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         if (user) {
-          // 既にログイン済みなら直接 /admin/ へ
           location.href = "/admin/";
         }
       });
@@ -148,12 +153,9 @@
       });
     }
 
-    // hash から invite_token を抽出
-    const hash = location.hash || '';
-    const tokenMatch = hash.match(/invite_token=([^&]+)/);
-    const recoveryMatch = hash.match(/recovery_token=([^&]+)/);
-    const token = tokenMatch ? tokenMatch[1] : (recoveryMatch ? recoveryMatch[1] : null);
-    const isRecovery = !!recoveryMatch;
+    // widget 読込前に保存した token を使う
+    const token = window.__savedToken;
+    const isRecovery = window.__isRecovery;
 
     if (!token) {
       document.getElementById('noTokenView').style.display = 'block';
