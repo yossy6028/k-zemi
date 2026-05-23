@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Kゼミ ブログ記事 投稿</title>
+  <link rel="icon" href="/images/favicon.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #E8F5E9 0%, #ffffff 100%);
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.7;
+      color: #2D3748;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .header {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 1.3rem; color: #0D3311; }
+    .user-info { font-size: 0.85rem; color: #718096; }
+    .user-info button {
+      background: none; border: 1px solid #CBD5E0; color: #4A5568;
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+      margin-left: 8px;
+    }
+    .user-info button:hover { background: #F7FAFC; }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.92rem; color: #2D3748; }
+    .hint { font-size: 0.8rem; color: #718096; margin-top: -8px; margin-bottom: 14px; }
+    input[type="text"], input[type="date"], select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #E2E8F0;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #1B5E20; }
+    textarea { resize: vertical; min-height: 320px; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.92rem; line-height: 1.6; }
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+    .btn-primary {
+      width: 100%;
+      background: #1B5E20;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .2s;
+      margin-top: 8px;
+    }
+    .btn-primary:hover { background: #0D3311; }
+    .btn-primary:disabled { background: #A0AEC0; cursor: not-allowed; }
+    .alert { padding: 14px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.92rem; }
+    .alert-error { background: #FED7D7; color: #9B2C2C; border: 1px solid #FC8181; }
+    .alert-success { background: #C6F6D5; color: #22543D; border: 1px solid #68D391; }
+    .alert-info { background: #BEE3F8; color: #2C5282; border: 1px solid #63B3ED; }
+    .login-card { text-align: center; }
+    .login-card a {
+      display: inline-block;
+      padding: 14px 28px;
+      background: #1B5E20;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-weight: 700;
+    }
+    .markdown-help {
+      background: #F7FAFC;
+      border-left: 4px solid #C9A227;
+      padding: 14px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #4A5568;
+      margin-bottom: 16px;
+    }
+    .markdown-help code { background: #fff; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- 未ログイン時 -->
+    <div id="loginView" class="card login-card" style="display:none">
+      <h1 style="font-size:1.4rem;color:#0D3311;margin-bottom:8px">ログインが必要です</h1>
+      <p style="color:#718096">記事投稿には Kゼミ ブログ管理画面のアカウントでログインしてください。</p>
+      <a href="/signup.html">招待リンクからログイン</a>
+    </div>
+
+    <!-- ログイン済み時 -->
+    <div id="postView" style="display:none">
+      <div class="header">
+        <h1>📝 Kゼミ ブログ記事 投稿</h1>
+        <div class="user-info">
+          <span id="userEmail"></span>
+          <button id="logoutBtn">ログアウト</button>
+        </div>
+      </div>
+
+      <div id="alertBox"></div>
+
+      <div class="card">
+        <form id="postForm">
+          <label for="title">記事タイトル <span style="color:#C00">＊</span></label>
+          <input type="text" id="title" required placeholder="例: 夏期講習のお知らせ">
+          <p class="hint">25文字前後を推奨。一覧やSNSでの見出しに使われます。</p>
+
+          <div class="row">
+            <div>
+              <label for="category">カテゴリ <span style="color:#C00">＊</span></label>
+              <select id="category" required>
+                <option value="お知らせ">お知らせ</option>
+                <option value="学習コラム">学習コラム</option>
+                <option value="受験情報">受験情報</option>
+                <option value="イベント">イベント</option>
+              </select>
+            </div>
+            <div>
+              <label for="date">公開日 <span style="color:#C00">＊</span></label>
+              <input type="text" id="date" required placeholder="例: 2026年6月1日">
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="slug">URL用ID（半角英数字+ハイフン）</label>
+              <input type="text" id="slug" pattern="[a-z0-9-]+" placeholder="例: summer-2026">
+              <p class="hint">空欄なら自動生成されます</p>
+            </div>
+            <div>
+              <label for="heroLabel">サムネイル用ラベル</label>
+              <input type="text" id="heroLabel" value="新着" placeholder="例: 新着">
+            </div>
+          </div>
+
+          <label for="tags">タグ（カンマ区切り、任意）</label>
+          <input type="text" id="tags" placeholder="例: 夏期講習, 学習法">
+
+          <div class="markdown-help">
+            <strong>📖 Markdown 書式</strong><br>
+            ・見出し: <code>## 大見出し</code> / <code>### 小見出し</code><br>
+            ・強調: <code>**太字**</code> / マーカー: <code>==蛍光ペン==</code><br>
+            ・引用: <code>&gt; 引用文</code> / 箇条書き: <code>- 項目</code><br>
+            ・手順ボックス: <code>::: callout タイトル</code> 〜 <code>:::</code>
+          </div>
+
+          <label for="body">記事本文 <span style="color:#C00">＊</span></label>
+          <textarea id="body" required placeholder="ここに記事本文を Markdown 形式で書いてください..."></textarea>
+
+          <button type="submit" class="btn-primary" id="publishBtn">📤 公開する（GitHub に保存）</button>
+        </form>
+      </div>
+
+      <div class="card" style="background:#FFFBEB;border-left:4px solid #F59E0B">
+        <p style="font-size:0.88rem;color:#92400E">
+          <strong>💡 公開後について</strong><br>
+          公開ボタンを押すと、記事は GitHub に自動保存され、約1〜2分後にブログサイトに反映されます。
+          反映後は <a href="/blog/" style="color:#1B5E20;font-weight:700">ブログ一覧</a> でご確認いただけます。
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+    const GIT_GATEWAY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/git/github';
+
+    // localStorage から user 取得
+    function getStoredUser() {
+      try {
+        return JSON.parse(localStorage.getItem('gotrue.user') || 'null');
+      } catch (e) { return null; }
+    }
+
+    // access_token を refresh する (有効期限切れ対応)
+    async function refreshTokenIfNeeded(user) {
+      if (!user || !user.token) return null;
+      const expiresAt = user.token.expires_at || 0;
+      // ms / 秒 両方の可能性に対応
+      const expiresMs = expiresAt > 1e12 ? expiresAt : expiresAt * 1000;
+      if (Date.now() < expiresMs - 60000) {
+        return user.token.access_token; // まだ有効
+      }
+      // refresh
+      try {
+        const res = await fetch(IDENTITY_BASE + '/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(user.token.refresh_token)
+        });
+        if (!res.ok) throw new Error('refresh failed');
+        const data = await res.json();
+        user.token.access_token = data.access_token;
+        user.token.refresh_token = data.refresh_token;
+        user.token.expires_at = Date.now() + (data.expires_in || 3600) * 1000;
+        localStorage.setItem('gotrue.user', JSON.stringify(user));
+        return data.access_token;
+      } catch (e) {
+        console.error('Token refresh failed:', e);
+        return null;
+      }
+    }
+
+    // slug 自動生成（タイトルから）
+    function generateSlug(title) {
+      // ASCII以外は除去、英数字をハイフンで連結
+      const cleaned = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (cleaned) return cleaned;
+      // 日本語の場合は日付ベース
+      const d = new Date();
+      return 'post-' + d.toISOString().slice(0, 10);
+    }
+
+    // カテゴリ→色マッピング
+    const CATEGORY_COLORS = {
+      'お知らせ': '#C9A227',
+      '学習コラム': '#1B5E20',
+      '受験情報': '#5D4037',
+      'イベント': '#1A237E'
+    };
+
+    // 日本語日付 today
+    function todayJP() {
+      const d = new Date();
+      return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+    }
+
+    // 初期化
+    const user = getStoredUser();
+    if (!user) {
+      document.getElementById('loginView').style.display = 'block';
+    } else {
+      document.getElementById('postView').style.display = 'block';
+      document.getElementById('userEmail').textContent = user.email || '';
+      document.getElementById('date').value = todayJP();
+    }
+
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+      if (confirm('ログアウトしますか？')) {
+        localStorage.removeItem('gotrue.user');
+        location.reload();
+      }
+    });
+
+    document.getElementById('postForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('publishBtn');
+      const alertBox = document.getElementById('alertBox');
+      btn.disabled = true;
+      btn.textContent = '保存中...';
+      alertBox.innerHTML = '';
+
+      try {
+        const title = document.getElementById('title').value.trim();
+        const category = document.getElementById('category').value;
+        const date = document.getElementById('date').value.trim();
+        let slug = document.getElementById('slug').value.trim();
+        const heroLabel = document.getElementById('heroLabel').value.trim() || '新着';
+        const tags = document.getElementById('tags').value.trim();
+        const body = document.getElementById('body').value;
+
+        if (!slug) slug = generateSlug(title);
+        // slug の英数字チェック
+        if (!/^[a-z0-9-]+$/.test(slug)) {
+          throw new Error('slug は半角英数字とハイフンのみ使えます: ' + slug);
+        }
+
+        // Markdown 構築
+        const frontMatter = [
+          '---',
+          'title: ' + title,
+          'slug: ' + slug,
+          'category: ' + category,
+          'category_color: ' + (CATEGORY_COLORS[category] || '#C9A227'),
+          'date: ' + date,
+          'read_time: 約5分',
+          'hero_label: ' + heroLabel,
+          tags ? 'tags: ' + tags : null,
+          '---',
+          '',
+          body
+        ].filter(l => l !== null).join('\n');
+
+        // access_token 取得 (必要なら refresh)
+        const accessToken = await refreshTokenIfNeeded(user);
+        if (!accessToken) {
+          alertBox.innerHTML = '<div class="alert alert-error">セッションが切れました。再ログインしてください。</div>';
+          setTimeout(() => location.href = '/signup.html', 2000);
+          return;
+        }
+
+        // 既存ファイルチェック (sha 取得が必要なら)
+        const filepath = 'posts/' + slug + '.md';
+        let existingSha = null;
+        const checkRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main', {
+          headers: { 'Authorization': 'Bearer ' + accessToken }
+        });
+        if (checkRes.ok) {
+          const existing = await checkRes.json();
+          existingSha = existing.sha;
+          if (!confirm('「' + slug + '」というIDの記事が既に存在します。上書きしますか？\n（記事を更新したい場合は「OK」、別記事として新規作成したい場合は「キャンセル」を押してID/タイトルを変えてください）')) {
+            btn.disabled = false;
+            btn.textContent = '📤 公開する（GitHub に保存）';
+            return;
+          }
+        }
+
+        // Base64 encode (UTF-8 safe)
+        const utf8Bytes = new TextEncoder().encode(frontMatter);
+        let binaryString = '';
+        utf8Bytes.forEach(b => binaryString += String.fromCharCode(b));
+        const base64Content = btoa(binaryString);
+
+        // GitHub API PUT
+        const commitMsg = existingSha
+          ? 'ブログ記事を更新: ' + slug + ' / ' + title
+          : 'ブログ記事を作成: ' + slug + ' / ' + title;
+        const putBody = {
+          message: commitMsg,
+          content: base64Content,
+          branch: 'main'
+        };
+        if (existingSha) putBody.sha = existingSha;
+
+        const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(putBody)
+        });
+        const putData = await putRes.json();
+
+        if (!putRes.ok) {
+          throw new Error(putData.message || JSON.stringify(putData));
+        }
+
+        const commitSha = putData.commit?.sha?.substring(0, 7) || '';
+        alertBox.innerHTML = '<div class="alert alert-success">✅ 公開しました！(' + (existingSha ? '更新' : '新規作成') + ': ' + slug + ', commit ' + commitSha + ')<br>約1〜2分後にブログサイトに反映されます。</div>';
+        btn.textContent = '📤 公開する（GitHub に保存）';
+        btn.disabled = false;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + (err.message || err) + '</div>';
+        btn.disabled = false;
+        btn.textContent = '📤 公開する（GitHub に保存）';
+        console.error('publish error:', err);
+      }
+    });
+  </script>
+</body>
+</html>

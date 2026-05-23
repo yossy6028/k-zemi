@@ -109,7 +109,7 @@
     <div id="noTokenView" class="no-token" style="display:none">
       <p>招待トークンが見つかりません。</p>
       <p>招待メールのリンクから直接アクセスしてください。</p>
-      <a href="/admin/">管理画面（ログイン済みの方）</a>
+      <a href="/post.html">管理画面（ログイン済みの方）</a>
     </div>
 
     <div id="formView" style="display:none">
@@ -146,7 +146,7 @@
     if (window.netlifyIdentity) {
       window.netlifyIdentity.on("init", user => {
         if (user) {
-          location.href = "/admin/";
+          location.href = "/post.html";
         }
       });
       window.netlifyIdentity.init({
@@ -215,7 +215,7 @@
         await gotrue.login(user.email, password, true);
 
         alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
-        setTimeout(() => { location.href = '/admin/'; }, 1200);
+        setTimeout(() => { location.href = '/post.html'; }, 1200);
       } catch (err) {
         const msg = err && err.message ? err.message : String(err);
         alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + msg + '</div>';
