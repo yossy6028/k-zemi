@@ -175,15 +175,35 @@
       alertBox.innerHTML = '';
 
       try {
-        // Step 1: /verify でアカウント有効化（widget の acceptInvite/signup は disable_signup 環境で失敗するため直叩き）
+        // Step 1: /verify でアカウント有効化
+        // - signup (invite_token): /verify で password 同時設定可能
+        // - recovery (recovery_token): /verify は token validate のみ、password は後で PUT /user で設定
+        const verifyBody = { type: isRecovery ? 'recovery' : 'signup', token: token };
+        if (!isRecovery) verifyBody.password = password;
         const verifyRes = await fetch(IDENTITY_BASE + '/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: isRecovery ? 'recovery' : 'signup', token: token, password: password })
+          body: JSON.stringify(verifyBody)
         });
         const verifyData = await verifyRes.json();
         if (!verifyRes.ok) {
           throw new Error(verifyData.msg || verifyData.error_description || JSON.stringify(verifyData));
+        }
+
+        // Step 1b: recovery の場合は PUT /user で password 設定
+        if (isRecovery) {
+          const updateRes = await fetch(IDENTITY_BASE + '/user', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + verifyData.access_token
+            },
+            body: JSON.stringify({ password: password })
+          });
+          if (!updateRes.ok) {
+            const errData = await updateRes.json();
+            throw new Error('パスワード更新失敗: ' + (errData.msg || JSON.stringify(errData)));
+          }
         }
 
         // Step 2: メールアドレス取得（widget.login に必要）
