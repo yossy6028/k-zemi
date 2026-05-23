@@ -3,54 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app" />
+  <meta http-equiv="refresh" content="0; url=/post.html">
   <title>Kゼミ ブログ管理画面</title>
-  <link rel="icon" href="../images/favicon.png" />
   <script>
-    // Decap CMS の git-gateway backend に Netlify サイトURLを伝える
-    // CMS は localStorage.netlifySiteURL を読んで /.netlify/identity と /.netlify/git/github のオリジンを上書きする
+    // ログイン済みなら /post.html へ、未ログインなら /login.html へ
     try {
-      localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
-    } catch (e) { /* localStorage 利用不可環境ではフォールバック不要 */ }
-    // Identity widget を Decap CMS より前に明示的に初期化
-    window.netlifyIdentityAPIUrl = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
-  </script>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script>
-    if (window.netlifyIdentity) {
-      // ハンドラは init() より先に登録
-      window.netlifyIdentity.on("init", user => {
-        if (!user) {
-          window.netlifyIdentity.on("login", () => {
-            document.location.href = "/admin/";
-          });
-        }
-      });
-      window.netlifyIdentity.init({
-        APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
-      });
-      // widget の autoInit / Decap CMS の再init が apiURL を相対パスに戻す不具合への対応:
-      // Object.defineProperty で apiURL を 読み取り専用 に固定し、書き込みを無視させる
-      const TARGET_URL = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
-      const lockApiURL = () => {
-        if (window.netlifyIdentity && window.netlifyIdentity.gotrue && window.netlifyIdentity.gotrue.api) {
-          try {
-            Object.defineProperty(window.netlifyIdentity.gotrue.api, 'apiURL', {
-              get() { return TARGET_URL; },
-              set() { /* write blocked */ },
-              configurable: true
-            });
-          } catch (e) {}
-        }
-      };
-      lockApiURL();
-      setTimeout(lockApiURL, 200);
-      setTimeout(lockApiURL, 1000);
-      setTimeout(lockApiURL, 3000);
+      const user = JSON.parse(localStorage.getItem('gotrue.user') || 'null');
+      location.replace(user ? '/post.html' : '/login.html');
+    } catch (e) {
+      location.replace('/login.html');
     }
   </script>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <p style="font-family:sans-serif;padding:40px;text-align:center;color:#666">
+    管理画面は移動しました。自動的にリダイレクトします...<br>
+    <a href="/post.html">記事投稿画面へ</a> / <a href="/login.html">ログイン画面へ</a>
+  </p>
 </body>
 </html>

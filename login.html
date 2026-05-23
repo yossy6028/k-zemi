@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app">
+  <title>Kゼミ ブログ管理画面 ログイン</title>
+  <link rel="icon" href="/images/favicon.png">
+  <script>
+    try { localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/'); } catch (e) {}
+  </script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #E8F5E9 0%, #ffffff 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 20px; line-height: 1.7; color: #2D3748;
+    }
+    .card {
+      background: #fff; border-radius: 20px; box-shadow: 0 12px 48px rgba(0,0,0,0.08);
+      max-width: 480px; width: 100%; padding: 40px 32px;
+    }
+    h1 { font-size: 1.5rem; color: #0D3311; font-weight: 900; margin-bottom: 8px; text-align: center; }
+    .subtitle { color: #718096; font-size: 0.95rem; margin-bottom: 28px; text-align: center; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.92rem; }
+    input { width: 100%; padding: 14px 16px; border: 2px solid #E2E8F0; border-radius: 8px;
+      font-size: 1rem; margin-bottom: 16px; outline: none; transition: border-color .2s; }
+    input:focus { border-color: #1B5E20; }
+    .btn-primary { width: 100%; background: #1B5E20; color: #fff; font-weight: 700; font-size: 1.05rem;
+      padding: 16px; border: none; border-radius: 10px; cursor: pointer; transition: background .2s; }
+    .btn-primary:hover { background: #0D3311; }
+    .btn-primary:disabled { background: #A0AEC0; cursor: not-allowed; }
+    .alert { padding: 14px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; }
+    .alert-error { background: #FED7D7; color: #9B2C2C; border: 1px solid #FC8181; }
+    .alert-success { background: #C6F6D5; color: #22543D; border: 1px solid #68D391; }
+    .help { margin-top: 24px; padding-top: 20px; border-top: 1px solid #E2E8F0;
+      font-size: 0.85rem; color: #718096; }
+    .help a { color: #1B5E20; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>🔑 ログイン</h1>
+    <p class="subtitle">Kゼミ ブログ管理画面</p>
+    <div id="alertBox"></div>
+    <form id="loginForm">
+      <label for="email">メールアドレス</label>
+      <input type="email" id="email" required autocomplete="email" placeholder="例: nakano@kzemi.com">
+      <label for="pw">パスワード</label>
+      <input type="password" id="pw" required autocomplete="current-password" placeholder="設定したパスワード">
+      <button type="submit" class="btn-primary" id="loginBtn">ログイン</button>
+    </form>
+    <div class="help">
+      <p>📩 まだパスワードを設定していない方<br>
+      → <a href="/signup.html">招待メールのリンクから初回設定</a></p>
+      <p style="margin-top:12px">❓ パスワードを忘れた方<br>
+      → 管理担当（吉井）までご連絡ください。再設定リンクをお送りします。</p>
+    </div>
+  </main>
+
+  <script>
+    const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+
+    // 既にログイン済みなら直接 /post.html へ
+    function getStoredUser() {
+      try { return JSON.parse(localStorage.getItem('gotrue.user') || 'null'); } catch (e) { return null; }
+    }
+    if (getStoredUser()) {
+      location.href = '/post.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('pw').value;
+      const btn = document.getElementById('loginBtn');
+      const alertBox = document.getElementById('alertBox');
+      btn.disabled = true;
+      btn.textContent = 'ログイン中...';
+      alertBox.innerHTML = '';
+
+      try {
+        // widget gotrue が準備できるまで待つ
+        const waitForGotrue = () => new Promise((resolve, reject) => {
+          let attempts = 0;
+          const check = () => {
+            if (window.netlifyIdentity && window.netlifyIdentity.gotrue) {
+              resolve(window.netlifyIdentity.gotrue);
+            } else if (attempts++ > 50) reject(new Error('widget timeout'));
+            else setTimeout(check, 100);
+          };
+          check();
+        });
+        const gotrue = await waitForGotrue();
+        // apiURL 強制上書き (widget の autoInit は相対パスにする不具合)
+        gotrue.api.apiURL = IDENTITY_BASE;
+        await gotrue.login(email, password, true);
+        alertBox.innerHTML = '<div class="alert alert-success">✅ ログイン成功！投稿画面に移動します...</div>';
+        setTimeout(() => { location.href = '/post.html'; }, 800);
+      } catch (err) {
+        let msg = err && err.message ? err.message : String(err);
+        // GoTrue のエラーは英語が多いので日本語化
+        if (msg.includes('Invalid')) msg = 'メールアドレスまたはパスワードが正しくありません。';
+        if (msg.includes('No user found')) msg = 'このメールアドレスは登録されていません。';
+        alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + msg + '</div>';
+        btn.disabled = false;
+        btn.textContent = 'ログイン';
+      }
+    });
+  </script>
+</body>
+</html>

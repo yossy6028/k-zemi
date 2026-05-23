@@ -6,6 +6,9 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Kゼミ ブログ記事 投稿</title>
   <link rel="icon" href="/images/favicon.png">
+  <!-- EasyMDE: ボタン式 Markdown エディタ (太字/見出し/リスト等を視覚的操作) -->
+  <link rel="stylesheet" href="https://unpkg.com/easymde@2.18.0/dist/easymde.min.css">
+  <script src="https://unpkg.com/easymde@2.18.0/dist/easymde.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -111,8 +114,9 @@
     <!-- 未ログイン時 -->
     <div id="loginView" class="card login-card" style="display:none">
       <h1 style="font-size:1.4rem;color:#0D3311;margin-bottom:8px">ログインが必要です</h1>
-      <p style="color:#718096">記事投稿には Kゼミ ブログ管理画面のアカウントでログインしてください。</p>
-      <a href="/signup.html">招待リンクからログイン</a>
+      <p style="color:#718096;margin-bottom:8px">記事投稿には Kゼミ ブログ管理画面のアカウントでログインしてください。</p>
+      <a href="/login.html">ログイン（メール+パスワード）</a>
+      <p style="margin-top:16px;font-size:0.82rem;color:#A0AEC0">初回の方は <a href="/signup.html" style="color:#1B5E20">招待メールのリンクから設定</a></p>
     </div>
 
     <!-- ログイン済み時 -->
@@ -254,6 +258,35 @@
       return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
     }
 
+    // 下書き自動保存キー
+    const DRAFT_KEY = 'kzemi_post_draft_v1';
+    let easymde = null;
+
+    // 下書き保存
+    function saveDraft() {
+      try {
+        const draft = {
+          title: document.getElementById('title').value,
+          slug: document.getElementById('slug').value,
+          category: document.getElementById('category').value,
+          date: document.getElementById('date').value,
+          heroLabel: document.getElementById('heroLabel').value,
+          tags: document.getElementById('tags').value,
+          body: easymde ? easymde.value() : document.getElementById('body').value,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      } catch (e) {}
+    }
+    function loadDraft() {
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) { return null; }
+    }
+    function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+
     // 初期化
     const user = getStoredUser();
     if (!user) {
@@ -262,6 +295,58 @@
       document.getElementById('postView').style.display = 'block';
       document.getElementById('userEmail').textContent = user.email || '';
       document.getElementById('date').value = todayJP();
+
+      // EasyMDE: ボタン式 Markdown エディタ (太字/見出し/リスト等)
+      try {
+        easymde = new EasyMDE({
+          element: document.getElementById('body'),
+          spellChecker: false,
+          status: false,
+          minHeight: '320px',
+          placeholder: 'ここに記事本文を書いてください。ツールバーのボタンで太字や見出しを挿入できます。',
+          toolbar: [
+            { name: 'bold', action: EasyMDE.toggleBold, className: 'fa fa-bold', title: '太字' },
+            { name: 'italic', action: EasyMDE.toggleItalic, className: 'fa fa-italic', title: '斜体' },
+            { name: 'heading-2', action: EasyMDE.toggleHeading2, className: 'fa fa-header', title: '大見出し' },
+            { name: 'heading-3', action: EasyMDE.toggleHeading3, className: 'fa fa-header', title: '小見出し' },
+            '|',
+            { name: 'unordered-list', action: EasyMDE.toggleUnorderedList, className: 'fa fa-list-ul', title: '箇条書き' },
+            { name: 'ordered-list', action: EasyMDE.toggleOrderedList, className: 'fa fa-list-ol', title: '番号付きリスト' },
+            { name: 'quote', action: EasyMDE.toggleBlockquote, className: 'fa fa-quote-left', title: '引用' },
+            '|',
+            { name: 'link', action: EasyMDE.drawLink, className: 'fa fa-link', title: 'リンク' },
+            '|',
+            { name: 'preview', action: EasyMDE.togglePreview, className: 'fa fa-eye no-disable', title: 'プレビュー' }
+          ]
+        });
+        // 下書き自動保存 (3秒間隔)
+        easymde.codemirror.on('change', () => { saveDraft(); });
+      } catch (e) {
+        console.warn('EasyMDE init failed, fallback to textarea:', e);
+      }
+
+      // 他のフィールドも変更時に下書き保存
+      ['title','slug','category','date','heroLabel','tags'].forEach(id => {
+        document.getElementById(id).addEventListener('input', saveDraft);
+        document.getElementById(id).addEventListener('change', saveDraft);
+      });
+
+      // 下書き復元
+      const draft = loadDraft();
+      if (draft && (draft.title || draft.body)) {
+        if (confirm('前回保存した下書きがあります。復元しますか？\n（保存時刻: ' + (draft.savedAt || '不明') + '）')) {
+          document.getElementById('title').value = draft.title || '';
+          document.getElementById('slug').value = draft.slug || '';
+          document.getElementById('category').value = draft.category || 'お知らせ';
+          document.getElementById('date').value = draft.date || todayJP();
+          document.getElementById('heroLabel').value = draft.heroLabel || '新着';
+          document.getElementById('tags').value = draft.tags || '';
+          if (easymde) easymde.value(draft.body || '');
+          else document.getElementById('body').value = draft.body || '';
+        } else {
+          clearDraft();
+        }
+      }
     }
 
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
@@ -286,7 +371,7 @@
         let slug = document.getElementById('slug').value.trim();
         const heroLabel = document.getElementById('heroLabel').value.trim() || '新着';
         const tags = document.getElementById('tags').value.trim();
-        const body = document.getElementById('body').value;
+        const body = easymde ? easymde.value() : document.getElementById('body').value;
 
         if (!slug) slug = generateSlug(title);
         // slug の英数字チェック
@@ -367,6 +452,12 @@
 
         const commitSha = putData.commit?.sha?.substring(0, 7) || '';
         alertBox.innerHTML = '<div class="alert alert-success">✅ 公開しました！(' + (existingSha ? '更新' : '新規作成') + ': ' + slug + ', commit ' + commitSha + ')<br>約1〜2分後にブログサイトに反映されます。</div>';
+        // 公開成功 → 下書きクリア + フォームリセット
+        clearDraft();
+        document.getElementById('title').value = '';
+        document.getElementById('slug').value = '';
+        document.getElementById('tags').value = '';
+        if (easymde) easymde.value('');
         btn.textContent = '📤 公開する（GitHub に保存）';
         btn.disabled = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
