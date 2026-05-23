@@ -16,17 +16,29 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     if (window.netlifyIdentity) {
+      // エラー詳細を画面に大きく可視化（widget標準のエラー表示は1文字目しか見えない問題への対応）
+      window.netlifyIdentity.on("error", err => {
+        try {
+          var msg = (err && err.message) ? err.message : JSON.stringify(err);
+          var box = document.getElementById('__identity_err__');
+          if (!box) {
+            box = document.createElement('div');
+            box.id = '__identity_err__';
+            box.style.cssText = 'position:fixed;top:20px;left:20px;right:20px;padding:16px;background:#FEE;border:2px solid #C00;color:#900;font-size:14px;border-radius:8px;z-index:999999;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:560px;margin:0 auto;';
+            document.body.appendChild(box);
+          }
+          box.textContent = 'エラー詳細: ' + msg;
+          console.error('Identity error:', err);
+        } catch (e) {}
+      });
       window.netlifyIdentity.on("init", user => {
         if (user) {
-          // 既にログイン済みなら admin/ にリダイレクト
           document.location.href = "/admin/";
           return;
         }
-        // login イベント（パスワード設定/ログイン成功）→ admin/ に遷移
         window.netlifyIdentity.on("login", () => {
           document.location.href = "/admin/";
         });
-        // 招待/メール確認/パスワードリセットトークンがあれば自動でモーダル
         var hash = location.hash;
         if (hash.indexOf('invite_token=') !== -1 || hash.indexOf('confirmation_token=') !== -1 || hash.indexOf('recovery_token=') !== -1) {
           window.netlifyIdentity.open();
