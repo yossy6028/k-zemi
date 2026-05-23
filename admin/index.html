@@ -18,7 +18,7 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     if (window.netlifyIdentity) {
-      // ハンドラは init() より先に登録（順序を逆にすると init イベントを取りこぼす）
+      // ハンドラは init() より先に登録
       window.netlifyIdentity.on("init", user => {
         if (!user) {
           window.netlifyIdentity.on("login", () => {
@@ -29,6 +29,17 @@
       window.netlifyIdentity.init({
         APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
       });
+      // widget の autoInit が apiURL を相対パスにする不具合への対応:
+      // init() 後と Decap CMS 起動後の両方で gotrue.api.apiURL を強制上書き
+      const forceApiURL = () => {
+        if (window.netlifyIdentity.gotrue && window.netlifyIdentity.gotrue.api) {
+          window.netlifyIdentity.gotrue.api.apiURL = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+        }
+      };
+      forceApiURL();
+      setTimeout(forceApiURL, 500);
+      setTimeout(forceApiURL, 1500);
+      setTimeout(forceApiURL, 3000);
     }
   </script>
 </head>
