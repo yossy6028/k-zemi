@@ -173,41 +173,56 @@
       btn.textContent = '設定中...';
       alertBox.innerHTML = '';
 
-      // widget の gotrue インスタンスが準備できるまで待つ
-      const waitForGotrue = () => new Promise((resolve, reject) => {
-        let attempts = 0;
-        const check = () => {
-          if (window.netlifyIdentity && window.netlifyIdentity.gotrue) {
-            resolve(window.netlifyIdentity.gotrue);
-          } else if (attempts++ > 50) {
-            reject(new Error('Identity widget が準備できません (timeout)'));
-          } else {
-            setTimeout(check, 100);
-          }
-        };
-        check();
-      });
-
       try {
-        const gotrue = await waitForGotrue();
-        let user;
-        if (isRecovery) {
-          // パスワードリセットフロー
-          user = await gotrue.recover(token).then(u => u.update({ password }));
-        } else {
-          // 招待 accept + パスワード設定
-          // gotrue.acceptInvite() は内部で /verify を呼び、結果を 'gotrue.user' キーで localStorage に保存
-          user = await gotrue.acceptInvite(token, password, true);
+        // ⚠️ widget.gotrue.acceptInvite() も内部で /signup を呼ぶため使えない
+        // → /verify エンドポイントを直接 fetch して invite accept
+        const verifyRes = await fetch(IDENTITY_BASE + '/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: isRecovery ? 'recovery' : 'signup', token: token, password: password })
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok) {
+          throw new Error(verifyData.msg || verifyData.error_description || JSON.stringify(verifyData));
         }
+
+        // /user でアカウント情報取得
+        const userRes = await fetch(IDENTITY_BASE + '/user', {
+          headers: { 'Authorization': 'Bearer ' + verifyData.access_token }
+        });
+        const user = userRes.ok ? await userRes.json() : { email: '', id: '' };
+
+        // gotrue-js が期待するセッション形式で 'gotrue.user' キー (固定) に保存
+        const expiresAt = Date.now() + (verifyData.expires_in || 3600) * 1000;
+        const session = {
+          url: IDENTITY_BASE,
+          token: {
+            access_token: verifyData.access_token,
+            refresh_token: verifyData.refresh_token,
+            expires_at: expiresAt,
+            token_type: verifyData.token_type
+          },
+          id: user.id,
+          aud: user.aud || '',
+          role: user.role || '',
+          email: user.email || '',
+          confirmed_at: user.confirmed_at,
+          app_metadata: user.app_metadata || {},
+          user_metadata: user.user_metadata || {},
+          created_at: user.created_at,
+          updated_at: user.updated_at
+        };
+        localStorage.setItem('gotrue.user', JSON.stringify(session));
+
         document.getElementById('emailDisplay').textContent = user.email || '';
         alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
         setTimeout(() => { location.href = '/admin/'; }, 1500);
       } catch (err) {
-        const msg = err && err.message ? err.message : (err && err.json ? JSON.stringify(err.json) : String(err));
+        const msg = err && err.message ? err.message : String(err);
         alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + msg + '</div>';
         btn.disabled = false;
         btn.textContent = 'パスワードを設定して管理画面に進む';
-        console.error('acceptInvite error:', err);
+        console.error('signup error:', err);
       }
     });
   </script>
