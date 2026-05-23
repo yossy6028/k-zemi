@@ -125,26 +125,41 @@
     </div>
   </main>
 
+  <!-- Netlify Identity widget をライブラリとして読み込み（UIは使わない） -->
+  <script>
+    try {
+      localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
+    } catch (e) {}
+  </script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+
+    // widget の init() で APIUrl を明示（hash処理せず、UI も表示しない方向）
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        if (user) {
+          // 既にログイン済みなら直接 /admin/ へ
+          location.href = "/admin/";
+        }
+      });
+      window.netlifyIdentity.init({
+        APIUrl: IDENTITY_BASE
+      });
+    }
 
     // hash から invite_token を抽出
     const hash = location.hash || '';
     const tokenMatch = hash.match(/invite_token=([^&]+)/);
     const recoveryMatch = hash.match(/recovery_token=([^&]+)/);
-    const confirmMatch = hash.match(/confirmation_token=([^&]+)/);
-    const token = tokenMatch ? tokenMatch[1] : (recoveryMatch ? recoveryMatch[1] : (confirmMatch ? confirmMatch[1] : null));
-    const tokenType = tokenMatch ? 'signup' : (recoveryMatch ? 'recovery' : (confirmMatch ? 'signup' : null));
+    const token = tokenMatch ? tokenMatch[1] : (recoveryMatch ? recoveryMatch[1] : null);
+    const isRecovery = !!recoveryMatch;
 
     if (!token) {
       document.getElementById('noTokenView').style.display = 'block';
     } else {
       document.getElementById('formView').style.display = 'block';
-      // メールアドレスを表示するため、トークンをJWTとしてデコード（payload部分のみ）
-      try {
-        // invite_token は GoTrue 内部形式で email を含まないので、最初は不明
-        document.getElementById('emailDisplay').textContent = '招待メールに記載のメールアドレス';
-      } catch (e) {}
+      document.getElementById('emailDisplay').textContent = '招待メールに記載のメールアドレス';
     }
 
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
@@ -156,61 +171,41 @@
       btn.textContent = '設定中...';
       alertBox.innerHTML = '';
 
-      try {
-        // /verify エンドポイントで invite accept + パスワード設定
-        const res = await fetch(IDENTITY_BASE + '/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: tokenType, token: token, password: password })
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-          alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + (data.msg || data.error_description || JSON.stringify(data)) + '</div>';
-          btn.disabled = false;
-          btn.textContent = 'パスワードを設定して管理画面に進む';
-          return;
-        }
-
-        // 成功: gotrue-js 互換形式で localStorage に保存
-        const expiresAt = Math.floor(Date.now() / 1000) + (data.expires_in || 3600);
-        // ユーザー情報も取得
-        const userRes = await fetch(IDENTITY_BASE + '/user', {
-          headers: { 'Authorization': 'Bearer ' + data.access_token }
-        });
-        const user = userRes.ok ? await userRes.json() : { email: '', id: '' };
-
-        const sessionData = {
-          url: IDENTITY_BASE,
-          token: {
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-            expires_at: expiresAt * 1000,
-            token_type: data.token_type
-          },
-          id: user.id,
-          aud: user.aud || '',
-          role: user.role || '',
-          email: user.email || '',
-          confirmed_at: user.confirmed_at || new Date().toISOString(),
-          app_metadata: user.app_metadata || {},
-          user_metadata: user.user_metadata || {},
-          created_at: user.created_at || new Date().toISOString(),
-          updated_at: user.updated_at || new Date().toISOString()
+      // widget の gotrue インスタンスが準備できるまで待つ
+      const waitForGotrue = () => new Promise((resolve, reject) => {
+        let attempts = 0;
+        const check = () => {
+          if (window.netlifyIdentity && window.netlifyIdentity.gotrue) {
+            resolve(window.netlifyIdentity.gotrue);
+          } else if (attempts++ > 50) {
+            reject(new Error('Identity widget が準備できません (timeout)'));
+          } else {
+            setTimeout(check, 100);
+          }
         };
+        check();
+      });
 
-        // gotrue-js は `gotrue.user.<APIUrl>` キーで保存
-        localStorage.setItem('gotrue.user.' + IDENTITY_BASE, JSON.stringify(sessionData));
-        // Decap CMS は別のキーで参照する場合もあるため複数キーに保存
-        localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
-
-        alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
+      try {
+        const gotrue = await waitForGotrue();
+        let user;
+        if (isRecovery) {
+          // パスワードリセットフロー
+          user = await gotrue.recover(token).then(u => u.update({ password }));
+        } else {
+          // 招待 accept + パスワード設定
+          // gotrue.acceptInvite() は内部で /verify を呼び、結果を 'gotrue.user' キーで localStorage に保存
+          user = await gotrue.acceptInvite(token, password, true);
+        }
         document.getElementById('emailDisplay').textContent = user.email || '';
-        setTimeout(() => { location.href = '/admin/'; }, 1800);
+        alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
+        setTimeout(() => { location.href = '/admin/'; }, 1500);
       } catch (err) {
-        alertBox.innerHTML = '<div class="alert alert-error">通信エラー: ' + err.message + '</div>';
+        const msg = err && err.message ? err.message : (err && err.json ? JSON.stringify(err.json) : String(err));
+        alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + msg + '</div>';
         btn.disabled = false;
         btn.textContent = 'パスワードを設定して管理画面に進む';
+        console.error('acceptInvite error:', err);
       }
     });
   </script>
