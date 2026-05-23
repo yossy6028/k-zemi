@@ -209,6 +209,9 @@
           check();
         });
         const gotrue = await waitForGotrue();
+        // widget の autoInit が apiURL を相対パス '/.netlify/identity' で初期化する不具合に対する強制上書き
+        // (init({APIUrl}) も metaタグも widget の autoInit を上書きできない為)
+        gotrue.api.apiURL = IDENTITY_BASE;
         await gotrue.login(user.email, password, true);
 
         alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
