@@ -29,17 +29,24 @@
       window.netlifyIdentity.init({
         APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
       });
-      // widget の autoInit が apiURL を相対パスにする不具合への対応:
-      // init() 後と Decap CMS 起動後の両方で gotrue.api.apiURL を強制上書き
-      const forceApiURL = () => {
-        if (window.netlifyIdentity.gotrue && window.netlifyIdentity.gotrue.api) {
-          window.netlifyIdentity.gotrue.api.apiURL = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+      // widget の autoInit / Decap CMS の再init が apiURL を相対パスに戻す不具合への対応:
+      // Object.defineProperty で apiURL を 読み取り専用 に固定し、書き込みを無視させる
+      const TARGET_URL = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+      const lockApiURL = () => {
+        if (window.netlifyIdentity && window.netlifyIdentity.gotrue && window.netlifyIdentity.gotrue.api) {
+          try {
+            Object.defineProperty(window.netlifyIdentity.gotrue.api, 'apiURL', {
+              get() { return TARGET_URL; },
+              set() { /* write blocked */ },
+              configurable: true
+            });
+          } catch (e) {}
         }
       };
-      forceApiURL();
-      setTimeout(forceApiURL, 500);
-      setTimeout(forceApiURL, 1500);
-      setTimeout(forceApiURL, 3000);
+      lockApiURL();
+      setTimeout(lockApiURL, 200);
+      setTimeout(lockApiURL, 1000);
+      setTimeout(lockApiURL, 3000);
     }
   </script>
 </head>
