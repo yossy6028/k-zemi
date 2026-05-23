@@ -174,8 +174,7 @@
       alertBox.innerHTML = '';
 
       try {
-        // ⚠️ widget.gotrue.acceptInvite() も内部で /signup を呼ぶため使えない
-        // → /verify エンドポイントを直接 fetch して invite accept
+        // Step 1: /verify でアカウント有効化（widget の acceptInvite/signup は disable_signup 環境で失敗するため直叩き）
         const verifyRes = await fetch(IDENTITY_BASE + '/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -186,37 +185,33 @@
           throw new Error(verifyData.msg || verifyData.error_description || JSON.stringify(verifyData));
         }
 
-        // /user でアカウント情報取得
+        // Step 2: メールアドレス取得（widget.login に必要）
         const userRes = await fetch(IDENTITY_BASE + '/user', {
           headers: { 'Authorization': 'Bearer ' + verifyData.access_token }
         });
-        const user = userRes.ok ? await userRes.json() : { email: '', id: '' };
-
-        // gotrue-js が期待するセッション形式で 'gotrue.user' キー (固定) に保存
-        const expiresAt = Date.now() + (verifyData.expires_in || 3600) * 1000;
-        const session = {
-          url: IDENTITY_BASE,
-          token: {
-            access_token: verifyData.access_token,
-            refresh_token: verifyData.refresh_token,
-            expires_at: expiresAt,
-            token_type: verifyData.token_type
-          },
-          id: user.id,
-          aud: user.aud || '',
-          role: user.role || '',
-          email: user.email || '',
-          confirmed_at: user.confirmed_at,
-          app_metadata: user.app_metadata || {},
-          user_metadata: user.user_metadata || {},
-          created_at: user.created_at,
-          updated_at: user.updated_at
-        };
-        localStorage.setItem('gotrue.user', JSON.stringify(session));
-
+        const user = await userRes.json();
         document.getElementById('emailDisplay').textContent = user.email || '';
+
+        // Step 3: widget の gotrue.login() で正規ログイン（内部で正しい形式の localStorage を作る）
+        // 手動 localStorage 書き込みでは widget の validation で弾かれるため必須
+        const waitForGotrue = () => new Promise((resolve, reject) => {
+          let attempts = 0;
+          const check = () => {
+            if (window.netlifyIdentity && window.netlifyIdentity.gotrue) {
+              resolve(window.netlifyIdentity.gotrue);
+            } else if (attempts++ > 50) {
+              reject(new Error('Identity widget timeout'));
+            } else {
+              setTimeout(check, 100);
+            }
+          };
+          check();
+        });
+        const gotrue = await waitForGotrue();
+        await gotrue.login(user.email, password, true);
+
         alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
-        setTimeout(() => { location.href = '/admin/'; }, 1500);
+        setTimeout(() => { location.href = '/admin/'; }, 1200);
       } catch (err) {
         const msg = err && err.message ? err.message : String(err);
         alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + msg + '</div>';
