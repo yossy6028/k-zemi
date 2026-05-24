@@ -180,7 +180,8 @@
           </div>
 
           <label for="body">記事本文 <span style="color:#C00">＊</span></label>
-          <textarea id="body" required placeholder="ここに記事本文を Markdown 形式で書いてください..."></textarea>
+          <!-- required 属性を外す: EasyMDE が textarea を非表示にするため、ブラウザの required validation が誤動作してボタンクリックの submit がサイレント cancel される。手動 validation は submit handler 内で実施 -->
+          <textarea id="body" placeholder="ここに記事本文を Markdown 形式で書いてください..."></textarea>
 
           <button type="submit" class="btn-primary" id="publishBtn">📤 公開する（GitHub に保存）</button>
         </form>
@@ -375,6 +376,12 @@
         const heroLabel = document.getElementById('heroLabel').value.trim() || '新着';
         const tags = document.getElementById('tags').value.trim();
         const body = easymde ? easymde.value() : document.getElementById('body').value;
+
+        // 手動 validation (textarea required を外したため)
+        if (!title.trim()) throw new Error('記事タイトルを入力してください');
+        if (!category) throw new Error('カテゴリを選択してください');
+        if (!date.trim()) throw new Error('公開日を入力してください');
+        if (!body.trim()) throw new Error('記事本文を入力してください');
 
         if (!slug) slug = generateSlug(title);
         // slug の英数字チェック
