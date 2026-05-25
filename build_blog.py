@@ -49,13 +49,82 @@ def parse_frontmatter(text):
     return fm, body
 
 
+def esc(s):
+    """HTMLメタ文字をエスケープ（XSS対策）。None/数値も安全に str 化。"""
+    if s is None:
+        return ""
+    return html_lib.escape(str(s), quote=True)
+
+
+def _safe_color(c):
+    """color 値が #RRGGBB / #RGB のみ許可（CSS injection 防止）。不正なら既定色を返す。"""
+    s = (c or "").strip()
+    if re.match(r'^#[0-9A-Fa-f]{3}$', s) or re.match(r'^#[0-9A-Fa-f]{6}$', s):
+        return s
+    return "#1B5E20"
+
+
+def _safe_slug(s):
+    """slug は半角英数+ハイフンのみ。href のパスに直接入れるため厳格化。"""
+    s = (s or "").strip()
+    if re.match(r'^[a-z0-9-]+$', s):
+        return s
+    return ""
+
+
+def _safe_url(url):
+    """href/src に使えるURLか検証（javascript: 等の危険スキームを拒否）。"""
+    u = (url or "").strip()
+    low = u.lower()
+    # 相対パス / 一般的な絶対URLは許可
+    if low.startswith(("http://", "https://", "/", "#", "mailto:", "tel:")):
+        return esc(u)
+    # スキーム無しの相対パス（./ ../ images/foo.png 等）も許可
+    if ":" not in u.split("/", 1)[0]:
+        return esc(u)
+    # それ以外（javascript:, data:, vbscript: 等）はリンクを無効化
+    return "#"
+
+
 def inline(text):
-    """**bold** ==marker== [text](url) ![alt](img) を変換。HTMLエスケープは行わない（既存HTML対応）"""
-    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
-    text = re.sub(r'==(.+?)==', r'<span class="marker">\1</span>', text)
-    # 画像（リンクより前に処理。!付きパターンが先にマッチするため）
-    text = re.sub(r'!\[(.*?)\]\((.+?)\)', r'<img src="\2" alt="\1" loading="lazy" class="post-img">', text)
-    text = re.sub(r'\[(.+?)\]\((.+?)\)', r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
+    """**bold** ==marker== [text](url) ![alt](img) を変換。
+    XSS対策: 本文は必ず html.escape() を通し、Markdown 記法だけを安全な HTML に展開する。
+    手順: Markdown 記法をプレースホルダに退避 → 残り全文を escape → プレースホルダを実 HTML へ復元。
+    """
+    if text is None:
+        return ""
+    placeholders = {}
+    counter = [0]
+
+    def stash(html_snippet):
+        key = f"\x00PH{counter[0]}\x00"
+        counter[0] += 1
+        placeholders[key] = html_snippet
+        return key
+
+    # 画像（リンクより先に処理）: ![alt](src)
+    def img_repl(m):
+        alt, src = m.group(1), m.group(2)
+        return stash(f'<img src="{_safe_url(src)}" alt="{esc(alt)}" loading="lazy" class="post-img">')
+    text = re.sub(r'!\[(.*?)\]\((.+?)\)', img_repl, text)
+
+    # リンク: [text](url)
+    def link_repl(m):
+        label, url = m.group(1), m.group(2)
+        return stash(f'<a href="{_safe_url(url)}" target="_blank" rel="noopener noreferrer">{esc(label)}</a>')
+    text = re.sub(r'\[(.+?)\]\((.+?)\)', link_repl, text)
+
+    # 太字 **text**
+    text = re.sub(r'\*\*(.+?)\*\*', lambda m: stash(f'<strong>{esc(m.group(1))}</strong>'), text)
+    # マーカー ==text==
+    text = re.sub(r'==(.+?)==', lambda m: stash(f'<span class="marker">{esc(m.group(1))}</span>'), text)
+
+    # 残り本文をエスケープ
+    text = esc(text)
+
+    # プレースホルダ復元（プレースホルダ自体は \x00 を含むので esc 後も保持される）
+    for key, snippet in placeholders.items():
+        text = text.replace(key, snippet)
     return text
 
 
@@ -378,41 +447,49 @@ def render_post_page(post, related_posts):
     body_html = render_blocks(blocks)
     hero_b64 = read_b64("blog-hero") or read_b64("hero")
     hero_img = f'data:image/jpeg;base64,{hero_b64}' if hero_b64 else ""
-    cat_color = fm.get("category_color", "#1B5E20")
+    cat_color = _safe_color(fm.get("category_color", "#1B5E20"))
     tags = [t.strip() for t in fm.get("tags", "").split(",") if t.strip()]
-    tags_html = "\n".join(f'<span class="post-tag">#{t}</span>' for t in tags)
+    tags_html = "\n".join(f'<span class="post-tag">#{esc(t)}</span>' for t in tags)
     related_cards = []
     for r in related_posts[:3]:
         rfm = r["fm"]
-        rcolor = rfm.get("category_color", "#1B5E20")
-        rslug = rfm.get("slug", "")
+        rcolor = _safe_color(rfm.get("category_color", "#1B5E20"))
+        rslug = _safe_slug(rfm.get("slug", ""))
         related_cards.append(f"""
         <a href="../{rslug}/index.html" class="related-card">
           <div class="related-thumb" style="background:linear-gradient(135deg,{rcolor},{rcolor}cc)">
-            <span>{rfm.get("category","")}</span>
+            <span>{esc(rfm.get("category",""))}</span>
           </div>
           <div class="related-body">
-            <h4>{rfm.get("title","")}</h4>
-            <span class="related-date">{rfm.get("date","")}</span>
+            <h4>{esc(rfm.get("title",""))}</h4>
+            <span class="related-date">{esc(rfm.get("date",""))}</span>
           </div>
         </a>""")
     related_html = "\n".join(related_cards) if related_cards else '<p style="text-align:center;color:var(--text-light)">他の記事は順次公開予定です。</p>'
     css = (common_css() + POST_PAGE_CSS).replace("HERO_OVERLAY", V["hero_overlay"])
-    title = fm.get("title", "")
-    lead_for_meta = ""
+    raw_title = fm.get("title", "")
+    title_esc = esc(raw_title)
+    category_esc = esc(fm.get("category", ""))
+    date_esc = esc(fm.get("date", ""))
+    read_time_esc = esc(fm.get("read_time", "約5分"))
+    lead_for_meta_raw = ""
     for b in blocks:
         if b["type"] == "p":
-            lead_for_meta = re.sub(r'<[^>]+>', '', b["text"])[:120]
+            # b["text"] は inline() で既にエスケープ済み HTML。strip でテキスト化したものを再エスケープ
+            lead_for_meta_raw = re.sub(r'<[^>]+>', '', b["text"])[:120]
             break
+    # render_blocks の出力結果はHTML（escape済み）を含むので、descriptionに入れる前にデコード→再エスケープ
+    lead_for_meta_text = html_lib.unescape(lead_for_meta_raw)
+    lead_for_meta = esc(lead_for_meta_text)
 
     page = f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title}｜{SCHOOL_NAME} 中野校</title>
+<title>{title_esc}｜{SCHOOL_NAME} 中野校</title>
 <meta name="description" content="{lead_for_meta}">
-<meta property="og:title" content="{title}">
+<meta property="og:title" content="{title_esc}">
 <meta property="og:description" content="{lead_for_meta}">
 <meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -424,18 +501,18 @@ def render_post_page(post, related_posts):
 <div class="scroll-progress" id="scrollProgress"></div>
 {header_html(blog_active=True, depth=1)}
 <section class="post-hero">
-  <div class="post-hero-bg"><img src="{hero_img}" alt="{title}"></div>
+  <div class="post-hero-bg"><img src="{hero_img}" alt="{title_esc}"></div>
   <div class="post-hero-overlay"></div>
   <div class="post-hero-content">
     <div class="breadcrumb">
-      <a href="../../index.html">ホーム</a>　&gt;　<a href="../index.html">お知らせ・ブログ</a>　&gt;　{fm.get("category","")}
+      <a href="../../index.html">ホーム</a>　&gt;　<a href="../index.html">お知らせ・ブログ</a>　&gt;　{category_esc}
     </div>
     <div class="post-hero-meta">
-      <span class="post-category-badge" style="color:{cat_color}">{fm.get("category","")}</span>
-      <span class="post-date">{fm.get("date","")}</span>
-      <span class="post-read-time">読了 {fm.get("read_time","約5分")}</span>
+      <span class="post-category-badge" style="color:{cat_color}">{category_esc}</span>
+      <span class="post-date">{date_esc}</span>
+      <span class="post-read-time">読了 {read_time_esc}</span>
     </div>
-    <h1>{title}</h1>
+    <h1>{title_esc}</h1>
   </div>
 </section>
 <section class="post-section">
@@ -452,7 +529,7 @@ def render_post_page(post, related_posts):
     <div class="post-share">
       <div class="post-share-label">この記事をシェアする</div>
       <div class="post-share-buttons">
-        <a class="share-btn share-x" href="https://twitter.com/intent/tweet?text={html_lib.escape(title)}" target="_blank" rel="noopener">X (Twitter)</a>
+        <a class="share-btn share-x" href="https://twitter.com/intent/tweet?text={esc(raw_title)}" target="_blank" rel="noopener">X (Twitter)</a>
         <a class="share-btn share-fb" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener">Facebook</a>
         <a class="share-btn share-line" href="https://social-plugins.line.me/lineit/share" target="_blank" rel="noopener">LINE</a>
       </div>
@@ -537,19 +614,23 @@ def render_index_page(posts):
                 if len(excerpt) > 110:
                     excerpt = excerpt[:110] + "..."
                 break
-        cat_color = fm.get("category_color", "#1B5E20")
-        slug = fm.get("slug", "")
+        cat_color = _safe_color(fm.get("category_color", "#1B5E20"))
+        slug = _safe_slug(fm.get("slug", ""))
+        if not slug:
+            continue  # 不正な slug はカード描画しない（href injection 防止）
+        hero_label = fm.get("hero_label") or fm.get("category", "")
+        # excerpt は render_blocks の inline() 通過済み（escape 済）→ そのまま挿入可
         cards.append(f"""
         <a href="./{slug}/index.html" class="blog-card">
           <div class="blog-card-thumb" style="background:linear-gradient(135deg,{cat_color},{cat_color}cc)">
-            <span class="blog-thumb-label">{fm.get("hero_label", fm.get("category",""))}</span>
+            <span class="blog-thumb-label">{esc(hero_label)}</span>
           </div>
           <div class="blog-card-body">
             <div class="blog-card-meta">
-              <span class="blog-category" style="background:{cat_color}15;color:{cat_color};border:1px solid {cat_color}33">{fm.get("category","")}</span>
-              <span class="blog-date">{fm.get("date","")}</span>
+              <span class="blog-category" style="background:{cat_color}15;color:{cat_color};border:1px solid {cat_color}33">{esc(fm.get("category",""))}</span>
+              <span class="blog-date">{esc(fm.get("date",""))}</span>
             </div>
-            <h3 class="blog-card-title">{fm.get("title","")}</h3>
+            <h3 class="blog-card-title">{esc(fm.get("title",""))}</h3>
             <p class="blog-card-excerpt">{excerpt}</p>
             <span class="blog-card-readmore">続きを読む &#10132;</span>
           </div>

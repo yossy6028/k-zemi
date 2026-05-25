@@ -128,11 +128,23 @@
     <!-- ログイン済み時 -->
     <div id="postView" style="display:none">
       <div class="header">
-        <h1>📝 Kゼミ ブログ記事 投稿</h1>
+        <h1 id="pageTitle">📝 Kゼミ ブログ記事 投稿</h1>
         <div class="user-info">
           <span id="userEmail"></span>
           <button id="logoutBtn">ログアウト</button>
         </div>
+      </div>
+
+      <div class="card" style="padding:14px 22px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="/manage.html" style="display:inline-block;padding:9px 16px;background:#fff;color:#1B5E20;border:2px solid #1B5E20;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem">📂 投稿一覧（編集・削除）</a>
+          <a href="/blog/" target="_blank" style="display:inline-block;padding:9px 16px;background:#fff;color:#1B5E20;border:2px solid #1B5E20;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem">🌐 ブログサイトを見る</a>
+          <a href="/post.html" id="newPostBtn" style="display:none;padding:9px 16px;background:#1B5E20;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem">✏️ 新規投稿に戻る</a>
+        </div>
+      </div>
+
+      <div id="editModeBanner" style="display:none;background:#FFFBEB;border:2px solid #F59E0B;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#92400E;font-size:0.92rem">
+        <strong>✏️ 編集モード</strong>：既存記事「<span id="editingSlug"></span>」を編集中です。保存すると上書きされます。
       </div>
 
       <div id="alertBox"></div>
@@ -212,6 +224,46 @@
     const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
     const GIT_GATEWAY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/git/github';
 
+    // ========== API エラー日本語化ヘルパ ==========
+    // GitHub API / Netlify Identity からのレスポンスを「塾長が読んで次に何をすべきか」分かる日本語に変換
+    function humanizeApiError(status, data, context) {
+      const raw = (data && (data.message || data.msg || data.error_description || data.error)) || '';
+      const ctx = context || '操作';
+      switch (status) {
+        case 401:
+          return 'ログインが切れています。一度ログアウトして、再度ログインしてからやり直してください。';
+        case 403:
+          return '権限がありません。アカウントが無効化されているか、管理者(吉井)にご連絡ください。\n（詳細: ' + raw + '）';
+        case 404:
+          return ctx + 'の対象が見つかりませんでした。記事が別タブで削除された可能性があります。一度「📂 投稿一覧」に戻って状態をご確認ください。';
+        case 409:
+        case 422:
+          if (/sha|conflict|does not match/i.test(raw)) {
+            return '他のタブやデバイスで同じ記事が更新された可能性があります。\n\n対処方法:\n1. このタブの本文を一度どこかにコピーしてください\n2. 「📂 投稿一覧」に戻って最新版を開き直してください\n3. コピーした本文を貼り付けてもう一度保存してください\n\n（詳細: ' + raw + '）';
+          }
+          return ctx + 'の内容に問題がある可能性があります。タイトル・本文・カテゴリ等をご確認ください。\n（詳細: ' + raw + '）';
+        case 429:
+          return 'GitHub の保存処理が混み合っています。1〜2分ほど待ってからもう一度お試しください。\n（詳細: ' + raw + '）';
+        case 500: case 502: case 503: case 504:
+          return 'GitHub または Netlify のサーバーが一時的に応答していません。1〜2分ほど待ってからやり直してください。\n（詳細: ' + status + ' ' + raw + '）';
+        default:
+          if (status >= 400) return ctx + 'に失敗しました（' + status + '）: ' + raw;
+          return raw || (ctx + 'に失敗しました');
+      }
+    }
+
+    async function fetchWithJson(url, options) {
+      try {
+        const res = await fetch(url, options);
+        let data = null;
+        try { data = await res.json(); } catch (e) { /* no body */ }
+        return { res, data };
+      } catch (networkErr) {
+        // fetch 自体が失敗（ネットワーク断・CORS・DNS）
+        throw new Error('ネットワークエラー: インターネット接続をご確認ください。\n（詳細: ' + (networkErr.message || networkErr) + '）');
+      }
+    }
+
     // localStorage から user 取得
     function getStoredUser() {
       try {
@@ -275,6 +327,82 @@
     // 下書き自動保存キー
     const DRAFT_KEY = 'kzemi_post_draft_v1';
     let easymde = null;
+
+    // ========== 編集モード判定 ==========
+    // URL に ?edit=slug があれば編集モード。
+    // 編集モード中は下書き復元を抑制し、既存記事の内容を prefill する。
+    const urlParams = new URLSearchParams(location.search);
+    const editingSlug = urlParams.get('edit');
+    const isEditMode = !!editingSlug;
+    let editingSha = null; // 編集対象記事の sha (PUT 時に競合検出に使う)
+
+    // frontmatter パーサ (manage.html と同等)
+    function parseFrontmatter(md) {
+      const m = md.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
+      if (!m) return { meta: {}, body: md };
+      const meta = {};
+      m[1].split('\n').forEach(line => {
+        const i = line.indexOf(':');
+        if (i < 0) return;
+        const key = line.slice(0, i).trim();
+        let val = line.slice(i + 1).trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        meta[key] = val;
+      });
+      return { meta: meta, body: m[2] || '' };
+    }
+
+    // 既存記事を GitHub から取得して prefill
+    async function loadEditingPost(slug) {
+      const user = getStoredUser();
+      const accessToken = await refreshTokenIfNeeded(user);
+      if (!accessToken) throw new Error('ログインが切れています');
+      const filepath = 'posts/' + slug + '.md';
+      const { res, data: errData } = await fetchWithJson(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (!res.ok) {
+        if (res.status === 404) throw new Error('記事「' + slug + '」が見つかりません。削除されたか、ID（slug）が間違っています。「📂 投稿一覧」から正しい記事を選んでください。');
+        throw new Error(humanizeApiError(res.status, errData, '編集対象記事の取得'));
+      }
+      const data = errData;
+      editingSha = data.sha;
+      const binary = atob(data.content.replace(/\s/g, ''));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const text = new TextDecoder('utf-8').decode(bytes);
+      const { meta, body } = parseFrontmatter(text);
+
+      // フィールドに反映
+      document.getElementById('title').value = meta.title || '';
+      document.getElementById('slug').value = slug;
+      const cat = document.getElementById('category');
+      if (cat && meta.category) {
+        const opt = [...cat.options].find(o => o.value === meta.category);
+        if (opt) cat.value = meta.category;
+      }
+      document.getElementById('date').value = meta.date || '';
+      document.getElementById('heroLabel').value = meta.hero_label || '新着';
+      document.getElementById('tags').value = meta.tags || '';
+      if (easymde) easymde.value(body);
+      else document.getElementById('body').value = body;
+
+      // UI を編集モードに切替
+      const banner = document.getElementById('editModeBanner');
+      if (banner) {
+        banner.style.display = 'block';
+        document.getElementById('editingSlug').textContent = slug;
+      }
+      const pageTitle = document.getElementById('pageTitle');
+      if (pageTitle) pageTitle.textContent = '✏️ Kゼミ ブログ記事 編集';
+      const btn = document.getElementById('publishBtn');
+      if (btn) btn.textContent = '💾 更新して保存（GitHub に保存）';
+      const newBtn = document.getElementById('newPostBtn');
+      if (newBtn) newBtn.style.display = 'inline-block';
+      document.title = '✏️ ブログ記事編集: ' + slug;
+    }
 
     // 下書き保存
     function saveDraft() {
@@ -348,20 +476,33 @@
           el.addEventListener('change', saveDraft);
         });
 
-        // 下書き復元
-        const draft = loadDraft();
-        if (draft && (draft.title || draft.body)) {
-          if (confirm('前回保存した下書きがあります。復元しますか？\n（保存時刻: ' + (draft.savedAt || '不明') + '）')) {
-            document.getElementById('title').value = draft.title || '';
-            document.getElementById('slug').value = draft.slug || '';
-            document.getElementById('category').value = draft.category || 'お知らせ';
-            document.getElementById('date').value = draft.date || todayJP();
-            document.getElementById('heroLabel').value = draft.heroLabel || '新着';
-            document.getElementById('tags').value = draft.tags || '';
-            if (easymde) easymde.value(draft.body || '');
-            else document.getElementById('body').value = draft.body || '';
-          } else {
-            clearDraft();
+        // 編集モードの場合は下書き復元せず、既存記事をロード
+        if (isEditMode) {
+          // 編集中の slug を間違って復元しないよう、編集用の下書きキーに切替
+          loadEditingPost(editingSlug).catch(err => {
+            const ab = document.getElementById('alertBox');
+            if (ab) {
+              ab.innerHTML = '<div class="alert alert-error">⚠️ ' + (err.message || err) + '</div>';
+              ab.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            console.error('[post.html] edit load failed:', err);
+          });
+        } else {
+          // 通常モード: 下書き復元
+          const draft = loadDraft();
+          if (draft && (draft.title || draft.body)) {
+            if (confirm('前回保存した下書きがあります。復元しますか？\n（保存時刻: ' + (draft.savedAt || '不明') + '）')) {
+              document.getElementById('title').value = draft.title || '';
+              document.getElementById('slug').value = draft.slug || '';
+              document.getElementById('category').value = draft.category || 'お知らせ';
+              document.getElementById('date').value = draft.date || todayJP();
+              document.getElementById('heroLabel').value = draft.heroLabel || '新着';
+              document.getElementById('tags').value = draft.tags || '';
+              if (easymde) easymde.value(draft.body || '');
+              else document.getElementById('body').value = draft.body || '';
+            } else {
+              clearDraft();
+            }
           }
         }
       }
@@ -461,16 +602,48 @@
         // 既存ファイルチェック (sha 取得が必要なら)
         const filepath = 'posts/' + slug + '.md';
         let existingSha = null;
-        const checkRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main', {
-          headers: { 'Authorization': 'Bearer ' + accessToken }
-        });
-        if (checkRes.ok) {
-          const existing = await checkRes.json();
-          existingSha = existing.sha;
-          if (!confirm('「' + slug + '」というIDの記事が既に存在します。上書きしますか？\n（記事を更新したい場合は「OK」、別記事として新規作成したい場合は「キャンセル」を押してID/タイトルを変えてください）')) {
-            if (btn) { btn.disabled = false; btn.textContent = '📤 公開する（GitHub に保存）'; }
-            _publishing = false;
-            return;
+
+        if (isEditMode) {
+          // 編集モード: 確認ダイアログ無しで上書き。
+          // editingSha があれば使い、無ければ最新を取り直す（タブ放置などで stale の可能性）。
+          if (editingSha) {
+            existingSha = editingSha;
+          } else {
+            const checkRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main', {
+              headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            if (checkRes.ok) existingSha = (await checkRes.json()).sha;
+          }
+          // slug が編集中に変えられた場合（編集 → slug書換 → 保存）は、新規記事扱いで再チェック
+          if (slug !== editingSlug) {
+            const slugChangedRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main', {
+              headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            if (slugChangedRes.ok) {
+              const other = await slugChangedRes.json();
+              if (!confirm('新しいID「' + slug + '」の記事が既に存在します。上書きしますか？\n（OK: 上書き / キャンセル: ID を変えて再保存）')) {
+                if (btn) { btn.disabled = false; btn.textContent = '💾 更新して保存（GitHub に保存）'; }
+                _publishing = false;
+                return;
+              }
+              existingSha = other.sha;
+            } else {
+              existingSha = null; // 新規ファイルとして作成
+            }
+          }
+        } else {
+          // 新規モード: 同じ slug が既にあれば確認
+          const checkRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main', {
+            headers: { 'Authorization': 'Bearer ' + accessToken }
+          });
+          if (checkRes.ok) {
+            const existing = await checkRes.json();
+            existingSha = existing.sha;
+            if (!confirm('「' + slug + '」というIDの記事が既に存在します。上書きしますか？\n（記事を更新したい場合は「OK」、別記事として新規作成したい場合は「キャンセル」を押してID/タイトルを変えてください）')) {
+              if (btn) { btn.disabled = false; btn.textContent = '📤 公開する（GitHub に保存）'; }
+              _publishing = false;
+              return;
+            }
           }
         }
 
@@ -491,7 +664,7 @@
         };
         if (existingSha) putBody.sha = existingSha;
 
-        const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath, {
+        const { res: putRes, data: putData } = await fetchWithJson(GIT_GATEWAY_BASE + '/contents/' + filepath, {
           method: 'PUT',
           headers: {
             'Authorization': 'Bearer ' + accessToken,
@@ -499,23 +672,34 @@
           },
           body: JSON.stringify(putBody)
         });
-        const putData = await putRes.json();
 
         if (!putRes.ok) {
-          throw new Error(putData.message || JSON.stringify(putData));
+          throw new Error(humanizeApiError(putRes.status, putData, isEditMode ? '記事の更新' : '記事の保存'));
         }
 
         const commitSha = putData.commit?.sha?.substring(0, 7) || '';
         if (alertBox) {
-          alertBox.innerHTML = '<div class="alert alert-success">✅ 公開しました！(' + (existingSha ? '更新' : '新規作成') + ': ' + slug + ', commit ' + commitSha + ')<br>約1〜2分後にブログサイトに反映されます。</div>';
+          const action = existingSha ? '更新' : '新規作成';
+          let msg = '<div class="alert alert-success">✅ ' + action + 'しました！(' + slug + ', commit ' + commitSha + ')<br>約1〜2分後にブログサイトに反映されます。';
+          if (isEditMode) {
+            msg += '<br><a href="/manage.html" style="color:#1B5E20;font-weight:700">📂 投稿一覧に戻る</a>';
+          }
+          msg += '</div>';
+          alertBox.innerHTML = msg;
         }
-        // 公開成功 → 下書きクリア + フォームリセット
-        clearDraft();
-        const t = document.getElementById('title'); if (t) t.value = '';
-        const s = document.getElementById('slug'); if (s) s.value = '';
-        const tg = document.getElementById('tags'); if (tg) tg.value = '';
-        if (easymde) easymde.value('');
-        if (btn) { btn.textContent = '📤 公開する（GitHub に保存）'; btn.disabled = false; }
+        if (isEditMode) {
+          // 編集成功 → editingSha を新しい sha に更新（連続編集対応）
+          editingSha = putData.content?.sha || null;
+          if (btn) { btn.textContent = '💾 更新して保存（GitHub に保存）'; btn.disabled = false; }
+        } else {
+          // 新規モード成功 → 下書きクリア + フォームリセット
+          clearDraft();
+          const t = document.getElementById('title'); if (t) t.value = '';
+          const s = document.getElementById('slug'); if (s) s.value = '';
+          const tg = document.getElementById('tags'); if (tg) tg.value = '';
+          if (easymde) easymde.value('');
+          if (btn) { btn.textContent = '📤 公開する（GitHub に保存）'; btn.disabled = false; }
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         if (alertBox) {

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Kゼミ ブログ記事 一覧（編集・削除）</title>
+  <link rel="icon" href="/images/favicon.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #E8F5E9 0%, #ffffff 100%);
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.7;
+      color: #2D3748;
+    }
+    .container { max-width: 880px; margin: 0 auto; }
+    .header {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header h1 { font-size: 1.3rem; color: #0D3311; }
+    .user-info { font-size: 0.85rem; color: #718096; }
+    .user-info button {
+      background: none; border: 1px solid #CBD5E0; color: #4A5568;
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+      margin-left: 8px;
+    }
+    .user-info button:hover { background: #F7FAFC; }
+    .nav-links {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .nav-links a {
+      display: inline-block;
+      padding: 10px 18px;
+      background: #1B5E20;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+    .nav-links a.secondary {
+      background: #fff;
+      color: #1B5E20;
+      border: 2px solid #1B5E20;
+    }
+    .nav-links a:hover { opacity: 0.85; }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .alert { padding: 14px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 0.92rem; }
+    .alert-error { background: #FED7D7; color: #9B2C2C; border: 1px solid #FC8181; }
+    .alert-success { background: #C6F6D5; color: #22543D; border: 1px solid #68D391; }
+    .alert-info { background: #BEE3F8; color: #2C5282; border: 1px solid #63B3ED; }
+
+    .post-list { display: flex; flex-direction: column; gap: 12px; }
+    .post-item {
+      background: #F7FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .post-meta { flex: 1; min-width: 240px; }
+    .post-title { font-size: 1.05rem; font-weight: 700; color: #1A202C; margin-bottom: 4px; }
+    .post-sub { font-size: 0.82rem; color: #718096; }
+    .post-category {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      margin-right: 8px;
+    }
+    .post-actions { display: flex; gap: 8px; }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-edit { background: #1B5E20; color: #fff; }
+    .btn-edit:hover { background: #0D3311; }
+    .btn-view { background: #fff; color: #1B5E20; border: 1px solid #1B5E20; }
+    .btn-view:hover { background: #F0FFF4; }
+    .btn-delete { background: #FED7D7; color: #9B2C2C; border: 1px solid #FC8181; }
+    .btn-delete:hover { background: #FC8181; color: #fff; }
+    .btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #718096;
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    .loading { text-align: center; padding: 40px; color: #718096; }
+    .loading .spinner {
+      display: inline-block;
+      width: 32px; height: 32px;
+      border: 4px solid #E2E8F0;
+      border-top-color: #1B5E20;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .login-card { text-align: center; }
+    .login-card-btn {
+      display: inline-block;
+      padding: 14px 28px;
+      background: #1B5E20;
+      color: white !important;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-weight: 700;
+    }
+    .login-card-btn:hover { background: #0D3311; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- 未ログイン時 -->
+    <div id="loginView" class="card login-card" style="display:none">
+      <h1 style="font-size:1.4rem;color:#0D3311;margin-bottom:8px">ログインが必要です</h1>
+      <p style="color:#718096">記事一覧の表示には Kゼミ ブログ管理画面のアカウントでログインしてください。</p>
+      <a href="/login.html" class="login-card-btn">ログイン画面へ</a>
+    </div>
+
+    <!-- ログイン済み時 -->
+    <div id="manageView" style="display:none">
+      <div class="header">
+        <h1>📂 投稿一覧</h1>
+        <div class="user-info">
+          <span id="userEmail"></span>
+          <button id="logoutBtn">ログアウト</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:16px 24px">
+        <div class="nav-links">
+          <a href="/post.html">✏️ 新規投稿</a>
+          <a href="/blog/" class="secondary" target="_blank">🌐 ブログサイトを見る</a>
+          <a href="/manage.html" class="secondary" id="reloadBtn">🔄 一覧を再読込</a>
+        </div>
+      </div>
+
+      <div id="alertBox"></div>
+
+      <div class="card">
+        <h2 style="font-size:1.05rem;color:#1B5E20;margin-bottom:12px;border-bottom:2px solid #E2E8F0;padding-bottom:8px">📚 公開中の記事</h2>
+        <div id="postListContainer">
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>記事一覧を読み込み中…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:#FFFBEB;border:1px solid #FCD34D">
+        <h2 style="font-size:1.05rem;color:#92400E;margin-bottom:8px;border-bottom:2px solid #FCD34D;padding-bottom:8px">🗑 ゴミ箱（アーカイブ）</h2>
+        <p style="font-size:0.86rem;color:#92400E;margin-bottom:14px">
+          削除した記事はここに保管されます。「♻️ 復元」でブログに戻せます。「🗑 完全削除」を押さない限りデータは残ります。
+        </p>
+        <div id="archiveListContainer">
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>ゴミ箱を読み込み中…</div>
+          </div>
+        </div>
+      </div>
+
+      <p style="text-align:center;font-size:0.72rem;color:#A0AEC0;margin-top:10px">
+        ver 2026-05-25-r4 / manage.html
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+    const GIT_GATEWAY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/git/github';
+
+    // APIエラー日本語化（post.html と同等の挙動）
+    function humanizeApiError(status, data, context) {
+      const raw = (data && (data.message || data.msg || data.error_description || data.error)) || '';
+      const ctx = context || '操作';
+      switch (status) {
+        case 401: return 'ログインが切れています。一度ログアウトして、再度ログインしてください。';
+        case 403: return '権限がありません。管理者(吉井)にご連絡ください。\n（詳細: ' + raw + '）';
+        case 404: return ctx + 'の対象が見つかりません。記事が他のタブで削除された可能性があります。「🔄 一覧を再読込」をお試しください。';
+        case 409: case 422:
+          if (/sha|conflict|does not match/i.test(raw)) {
+            return '記事が他のタブで変更された可能性があります。「🔄 一覧を再読込」をしてから、もう一度操作してください。\n（詳細: ' + raw + '）';
+          }
+          return ctx + 'の内容に問題があります。\n（詳細: ' + raw + '）';
+        case 429: return 'GitHub の処理が混み合っています。1〜2分待ってからやり直してください。';
+        case 500: case 502: case 503: case 504:
+          return 'サーバーが一時的に応答していません。1〜2分待ってからやり直してください。\n（詳細: ' + status + ' ' + raw + '）';
+        default:
+          if (status >= 400) return ctx + 'に失敗しました（' + status + '）: ' + raw;
+          return raw || (ctx + 'に失敗しました');
+      }
+    }
+
+    const CATEGORY_COLORS = {
+      'お知らせ': '#C9A227',
+      '学習コラム': '#1B5E20',
+      '受験情報': '#5D4037',
+      'イベント': '#1A237E'
+    };
+
+    function getStoredUser() {
+      try { return JSON.parse(localStorage.getItem('gotrue.user') || 'null'); }
+      catch (e) { return null; }
+    }
+
+    async function refreshTokenIfNeeded(user) {
+      if (!user || !user.token) return null;
+      const expiresAt = user.token.expires_at || 0;
+      const expiresMs = expiresAt > 1e12 ? expiresAt : expiresAt * 1000;
+      if (Date.now() < expiresMs - 60000) return user.token.access_token;
+      try {
+        const res = await fetch(IDENTITY_BASE + '/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(user.token.refresh_token)
+        });
+        if (!res.ok) throw new Error('refresh failed');
+        const data = await res.json();
+        user.token.access_token = data.access_token;
+        user.token.refresh_token = data.refresh_token;
+        user.token.expires_at = Date.now() + (data.expires_in || 3600) * 1000;
+        localStorage.setItem('gotrue.user', JSON.stringify(user));
+        return data.access_token;
+      } catch (e) {
+        console.error('[manage] token refresh failed:', e);
+        return null;
+      }
+    }
+
+    // frontmatter から最低限のメタデータをパース
+    function parseFrontmatter(md) {
+      const m = md.match(/^---\s*\n([\s\S]*?)\n---/);
+      if (!m) return {};
+      const result = {};
+      m[1].split('\n').forEach(line => {
+        const i = line.indexOf(':');
+        if (i < 0) return;
+        const key = line.slice(0, i).trim();
+        let val = line.slice(i + 1).trim();
+        // 引用符を剥がす
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        result[key] = val;
+      });
+      return result;
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function showAlert(html, type) {
+      const box = document.getElementById('alertBox');
+      if (!box) return;
+      box.innerHTML = '<div class="alert alert-' + (type || 'info') + '">' + html + '</div>';
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function fetchPosts(accessToken) {
+      let res, data;
+      try {
+        res = await fetch(GIT_GATEWAY_BASE + '/contents/posts?ref=main', {
+          headers: { 'Authorization': 'Bearer ' + accessToken }
+        });
+        data = await res.json().catch(() => ({}));
+      } catch (e) {
+        throw new Error('ネットワークエラー: インターネット接続をご確認ください。（' + (e.message || e) + '）');
+      }
+      if (!res.ok) throw new Error(humanizeApiError(res.status, data, '記事一覧の取得'));
+      // .md だけ、_template.md は除外
+      return data.filter(f =>
+        f.type === 'file' &&
+        f.name.endsWith('.md') &&
+        f.name !== '_template.md'
+      );
+    }
+
+    async function fetchArchivedPosts(accessToken) {
+      let res, data;
+      try {
+        res = await fetch(GIT_GATEWAY_BASE + '/contents/posts/_archive?ref=main', {
+          headers: { 'Authorization': 'Bearer ' + accessToken }
+        });
+        if (res.status === 404) return [];
+        data = await res.json().catch(() => ({}));
+      } catch (e) {
+        throw new Error('ネットワークエラー: インターネット接続をご確認ください。');
+      }
+      if (!res.ok) throw new Error(humanizeApiError(res.status, data, 'ゴミ箱一覧の取得'));
+      return data.filter(f => f.type === 'file' && f.name.endsWith('.md'));
+    }
+
+    async function fetchPostContent(accessToken, filepath) {
+      const res = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (!res.ok) throw new Error('記事の取得に失敗しました');
+      const data = await res.json();
+      // base64 → utf-8 decode
+      const binary = atob(data.content.replace(/\s/g, ''));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const text = new TextDecoder('utf-8').decode(bytes);
+      return { text: text, sha: data.sha };
+    }
+
+    // base64 (UTF-8 safe) エンコード
+    function toBase64Utf8(text) {
+      const bytes = new TextEncoder().encode(text);
+      let bin = '';
+      bytes.forEach(b => bin += String.fromCharCode(b));
+      return btoa(bin);
+    }
+
+    // 物理削除（最終的な完全消去用。アーカイブ内ファイルへの「永久削除」操作で使う）
+    async function hardDeleteFile(accessToken, filepath, sha, message) {
+      const res = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: message, sha: sha, branch: 'main' })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(humanizeApiError(res.status, data, 'ファイルの削除'));
+      }
+      return await res.json();
+    }
+
+    // 「削除」= posts/{slug}.md を posts/_archive/{slug}.md に移動
+    // 手順: 1) 元ファイルの内容取得  2) _archive/ へ PUT  3) 元を DELETE
+    // build_blog.py は posts/*.md のみ glob するため _archive 配下は公開ブログから外れる
+    async function archivePost(accessToken, filename, slug) {
+      const srcPath = 'posts/' + filename;
+      // 1) 元の内容と最新 sha を取得
+      const srcRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + srcPath + '?ref=main', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (!srcRes.ok) {
+        throw new Error('記事「' + slug + '」を取得できませんでした');
+      }
+      const srcData = await srcRes.json();
+      const srcSha = srcData.sha;
+      const contentBase64 = srcData.content.replace(/\s/g, '');
+
+      // 2) アーカイブ先パスを決定（同名がアーカイブにあれば日時 suffix で衝突回避）
+      let archiveFilename = filename;
+      let archivePath = 'posts/_archive/' + archiveFilename;
+      const checkRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + archivePath + '?ref=main', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (checkRes.ok) {
+        const ts = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
+        archiveFilename = filename.replace(/\.md$/, '') + '_' + ts + '.md';
+        archivePath = 'posts/_archive/' + archiveFilename;
+      }
+
+      // 3) アーカイブへ PUT
+      const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + archivePath, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + accessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: '記事をアーカイブ: ' + slug,
+          content: contentBase64,
+          branch: 'main'
+        })
+      });
+      if (!putRes.ok) {
+        const data = await putRes.json().catch(() => ({}));
+        throw new Error(humanizeApiError(putRes.status, data, 'アーカイブへの保存'));
+      }
+
+      // 4) 元を削除
+      try {
+        await hardDeleteFile(accessToken, srcPath, srcSha,
+          '記事をアーカイブに移動: ' + slug);
+      } catch (e) {
+        throw new Error('アーカイブへのコピーは成功しましたが、元記事の削除に失敗しました。手動で /posts/' + filename + ' を削除してください。元エラー: ' + e.message);
+      }
+
+      return archiveFilename;
+    }
+
+    // アーカイブから posts/ に戻す
+    async function restoreFromArchive(accessToken, archiveFilename) {
+      const srcPath = 'posts/_archive/' + archiveFilename;
+      // 1) アーカイブの内容と sha を取得
+      const srcRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + srcPath + '?ref=main', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (!srcRes.ok) throw new Error('アーカイブ記事を取得できませんでした');
+      const srcData = await srcRes.json();
+      const srcSha = srcData.sha;
+      const contentBase64 = srcData.content.replace(/\s/g, '');
+
+      // 2) 復元先（_2026... のような suffix は元の slug.md に戻す）
+      const baseFilename = archiveFilename.replace(/_\d{12,14}\.md$/, '.md');
+      const destPath = 'posts/' + baseFilename;
+      const slug = baseFilename.replace(/\.md$/, '');
+
+      // 3) 復元先に同名があれば確認
+      const checkRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + destPath + '?ref=main', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      if (checkRes.ok) {
+        if (!confirm('「' + slug + '」というIDの記事が既に存在します。上書きして復元しますか？')) {
+          return null;
+        }
+        const existingSha = (await checkRes.json()).sha;
+        // 既存を上書き PUT
+        const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + destPath, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: '記事をアーカイブから復元(上書き): ' + slug,
+            content: contentBase64,
+            sha: existingSha,
+            branch: 'main'
+          })
+        });
+        if (!putRes.ok) {
+          const data = await putRes.json().catch(() => ({}));
+          throw new Error(humanizeApiError(putRes.status, data, '記事の復元(上書き)'));
+        }
+      } else {
+        // 新規作成
+        const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + destPath, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: '記事をアーカイブから復元: ' + slug,
+            content: contentBase64,
+            branch: 'main'
+          })
+        });
+        if (!putRes.ok) {
+          const data = await putRes.json().catch(() => ({}));
+          throw new Error(humanizeApiError(putRes.status, data, '記事の復元'));
+        }
+      }
+
+      // 4) アーカイブ元を削除
+      try {
+        await hardDeleteFile(accessToken, srcPath, srcSha, '復元によりアーカイブから削除: ' + slug);
+      } catch (e) {
+        console.warn('アーカイブ削除失敗（復元は成功）:', e);
+      }
+      return slug;
+    }
+
+    function renderPostList(posts, metaMap) {
+      const container = document.getElementById('postListContainer');
+      if (!container) return;
+      if (!posts.length) {
+        container.innerHTML =
+          '<div class="empty-state">' +
+          '<div class="icon">📭</div>' +
+          '<div>まだ投稿された記事がありません。</div>' +
+          '<a href="/post.html" class="login-card-btn" style="margin-top:16px">✏️ 最初の記事を書く</a>' +
+          '</div>';
+        return;
+      }
+      // 日付降順（meta.date があれば優先、なければファイル名）
+      const sorted = posts.slice().sort((a, b) => {
+        const da = (metaMap[a.name]?.date || a.name);
+        const db = (metaMap[b.name]?.date || b.name);
+        return db.localeCompare(da);
+      });
+
+      const html = '<div class="post-list">' + sorted.map(file => {
+        const slug = file.name.replace(/\.md$/, '');
+        const meta = metaMap[file.name] || {};
+        const title = meta.title || slug;
+        const category = meta.category || 'お知らせ';
+        const date = meta.date || '日付未設定';
+        const color = CATEGORY_COLORS[category] || '#C9A227';
+        const safeSlug = encodeURIComponent(slug);
+        return '<div class="post-item">' +
+          '<div class="post-meta">' +
+            '<div class="post-title">' + escapeHtml(title) + '</div>' +
+            '<div class="post-sub">' +
+              '<span class="post-category" style="background:' + color + '">' + escapeHtml(category) + '</span>' +
+              escapeHtml(date) + ' / slug: <code>' + escapeHtml(slug) + '</code>' +
+            '</div>' +
+          '</div>' +
+          '<div class="post-actions">' +
+            '<a href="/blog/' + encodeURIComponent(slug) + '/" class="btn btn-view" target="_blank">👁 見る</a>' +
+            '<a href="/post.html?edit=' + safeSlug + '" class="btn btn-edit">✏️ 編集</a>' +
+            '<button class="btn btn-delete" data-slug="' + escapeHtml(slug) + '" data-filename="' + escapeHtml(file.name) + '">🗑 削除</button>' +
+          '</div>' +
+          '</div>';
+      }).join('') + '</div>';
+
+      container.innerHTML = html;
+
+      // 「削除」ボタン = アーカイブへ移動（誤削除復旧可能）
+      container.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const slug = btn.dataset.slug;
+          const filename = btn.dataset.filename;
+          if (!confirm('「' + slug + '」を削除（ゴミ箱に移動）しますか？\n\n削除後はブログサイトから消えますが、画面下の「🗑 ゴミ箱（アーカイブ）」セクションから元に戻すことができます。\n\n削除する場合は「OK」を押してください。')) {
+            return;
+          }
+          btn.disabled = true;
+          btn.textContent = '削除中…';
+          try {
+            const user = getStoredUser();
+            const accessToken = await refreshTokenIfNeeded(user);
+            if (!accessToken) throw new Error('ログインが切れています。再ログインしてください。');
+            await archivePost(accessToken, filename, slug);
+            showAlert('✅ ゴミ箱に移動しました: ' + escapeHtml(slug) + '<br>約1〜2分後にブログサイトから消えます。間違えた場合は画面下の「🗑 ゴミ箱（アーカイブ）」から元に戻せます。', 'success');
+            setTimeout(() => loadAndRender(), 800);
+          } catch (err) {
+            showAlert('⚠️ ' + escapeHtml(err.message || String(err)), 'error');
+            btn.disabled = false;
+            btn.textContent = '🗑 削除';
+          }
+        });
+      });
+    }
+
+    // アーカイブ一覧の描画
+    function renderArchiveList(archives, metaMap) {
+      const container = document.getElementById('archiveListContainer');
+      if (!container) return;
+      if (!archives.length) {
+        container.innerHTML =
+          '<div class="empty-state" style="padding:20px"><div style="color:#A0AEC0">ゴミ箱は空です。</div></div>';
+        return;
+      }
+      const html = '<div class="post-list">' + archives.map(file => {
+        const archiveFilename = file.name;
+        // suffix を剥がしたオリジナル slug を推定
+        const slug = archiveFilename.replace(/_\d{12,14}\.md$/, '').replace(/\.md$/, '');
+        const meta = metaMap[archiveFilename] || {};
+        const title = meta.title || slug;
+        const category = meta.category || 'お知らせ';
+        const date = meta.date || '日付未設定';
+        const color = CATEGORY_COLORS[category] || '#C9A227';
+        return '<div class="post-item" style="background:#FFFBEB;border-color:#FCD34D">' +
+          '<div class="post-meta">' +
+            '<div class="post-title">' + escapeHtml(title) + '</div>' +
+            '<div class="post-sub">' +
+              '<span class="post-category" style="background:' + color + '">' + escapeHtml(category) + '</span>' +
+              escapeHtml(date) + ' / アーカイブ名: <code>' + escapeHtml(archiveFilename) + '</code>' +
+            '</div>' +
+          '</div>' +
+          '<div class="post-actions">' +
+            '<button class="btn btn-edit btn-restore" data-archive="' + escapeHtml(archiveFilename) + '" data-slug="' + escapeHtml(slug) + '">♻️ 復元</button>' +
+            '<button class="btn btn-delete btn-perm-delete" data-archive="' + escapeHtml(archiveFilename) + '" data-slug="' + escapeHtml(slug) + '" data-sha="' + escapeHtml(file.sha) + '">🗑 完全削除</button>' +
+          '</div>' +
+          '</div>';
+      }).join('') + '</div>';
+      container.innerHTML = html;
+
+      // 復元ボタン
+      container.querySelectorAll('.btn-restore').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const archiveFilename = btn.dataset.archive;
+          const slug = btn.dataset.slug;
+          if (!confirm('「' + slug + '」を復元しますか？\n\n復元すると約1〜2分後にブログサイトに再表示されます。')) return;
+          btn.disabled = true;
+          btn.textContent = '復元中…';
+          try {
+            const user = getStoredUser();
+            const accessToken = await refreshTokenIfNeeded(user);
+            if (!accessToken) throw new Error('ログインが切れています。');
+            const restoredSlug = await restoreFromArchive(accessToken, archiveFilename);
+            if (restoredSlug) {
+              showAlert('✅ 復元しました: ' + escapeHtml(restoredSlug) + '<br>約1〜2分後にブログサイトに再表示されます。', 'success');
+              setTimeout(() => loadAndRender(), 800);
+            } else {
+              btn.disabled = false;
+              btn.textContent = '♻️ 復元';
+            }
+          } catch (err) {
+            showAlert('⚠️ ' + escapeHtml(err.message || String(err)), 'error');
+            btn.disabled = false;
+            btn.textContent = '♻️ 復元';
+          }
+        });
+      });
+
+      // 完全削除ボタン
+      container.querySelectorAll('.btn-perm-delete').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const archiveFilename = btn.dataset.archive;
+          const slug = btn.dataset.slug;
+          const sha = btn.dataset.sha;
+          if (!confirm('「' + slug + '」をゴミ箱から完全に削除しますか？\n\nこの操作は取り消せません。ファイル自体がGitHubから消去されます。\n\n完全削除する場合は「OK」を押してください。')) return;
+          if (!confirm('本当によろしいですか？もう一度確認します。\n\n「' + slug + '」をゴミ箱から完全削除（取り消し不能）。')) return;
+          btn.disabled = true;
+          btn.textContent = '削除中…';
+          try {
+            const user = getStoredUser();
+            const accessToken = await refreshTokenIfNeeded(user);
+            if (!accessToken) throw new Error('ログインが切れています。');
+            // 最新 sha を再取得
+            const path = 'posts/_archive/' + archiveFilename;
+            const checkRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + path + '?ref=main', {
+              headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            if (!checkRes.ok) throw new Error('アーカイブ記事が見つかりません');
+            const latest = await checkRes.json();
+            await hardDeleteFile(accessToken, path, latest.sha, 'アーカイブから完全削除: ' + slug);
+            showAlert('✅ 完全削除しました: ' + escapeHtml(slug), 'success');
+            setTimeout(() => loadAndRender(), 800);
+          } catch (err) {
+            showAlert('⚠️ ' + escapeHtml(err.message || String(err)), 'error');
+            btn.disabled = false;
+            btn.textContent = '🗑 完全削除';
+          }
+        });
+      });
+    }
+
+    async function loadAndRender() {
+      const container = document.getElementById('postListContainer');
+      const archiveContainer = document.getElementById('archiveListContainer');
+      if (container) {
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><div>記事一覧を読み込み中…</div></div>';
+      }
+      if (archiveContainer) {
+        archiveContainer.innerHTML = '<div class="loading"><div class="spinner"></div><div>ゴミ箱を読み込み中…</div></div>';
+      }
+      try {
+        const user = getStoredUser();
+        const accessToken = await refreshTokenIfNeeded(user);
+        if (!accessToken) {
+          showAlert('ログインが切れています。ログイン画面に戻ります…', 'error');
+          setTimeout(() => location.href = '/login.html', 2000);
+          return;
+        }
+        // 公開記事とアーカイブを並列取得
+        const [posts, archives] = await Promise.all([
+          fetchPosts(accessToken),
+          fetchArchivedPosts(accessToken).catch(e => { console.warn('[manage] archive fetch:', e); return []; })
+        ]);
+
+        // それぞれの frontmatter を並列取得
+        const metaMap = {};
+        const archiveMetaMap = {};
+        await Promise.all([
+          ...posts.map(async file => {
+            try {
+              const { text } = await fetchPostContent(accessToken, 'posts/' + file.name);
+              metaMap[file.name] = parseFrontmatter(text);
+            } catch (e) {
+              console.warn('[manage] meta fetch failed for', file.name, e);
+              metaMap[file.name] = {};
+            }
+          }),
+          ...archives.map(async file => {
+            try {
+              const { text } = await fetchPostContent(accessToken, 'posts/_archive/' + file.name);
+              archiveMetaMap[file.name] = parseFrontmatter(text);
+            } catch (e) {
+              console.warn('[manage] archive meta fetch failed for', file.name, e);
+              archiveMetaMap[file.name] = {};
+            }
+          })
+        ]);
+        renderPostList(posts, metaMap);
+        renderArchiveList(archives, archiveMetaMap);
+      } catch (err) {
+        console.error('[manage] load error:', err);
+        if (container) {
+          container.innerHTML =
+            '<div class="alert alert-error">⚠️ ' + escapeHtml(err.message || String(err)) + '</div>';
+        }
+      }
+    }
+
+    // 初期化
+    try {
+      const user = getStoredUser();
+      if (!user) {
+        document.getElementById('loginView').style.display = 'block';
+      } else {
+        document.getElementById('manageView').style.display = 'block';
+        document.getElementById('userEmail').textContent = user.email || '';
+        loadAndRender();
+      }
+      document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if (confirm('ログアウトしますか？')) {
+          localStorage.removeItem('gotrue.user');
+          location.reload();
+        }
+      });
+      // 再読込ボタンは A タグだが、念のため SPA 風に再fetch
+      document.getElementById('reloadBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        loadAndRender();
+      });
+    } catch (initErr) {
+      console.error('[manage] init error:', initErr);
+    }
+  </script>
+</body>
+</html>
