@@ -1,5 +1,20 @@
 name: Build Kzemi Blog
 
+# ====================================================================
+# 公開アーキテクチャ:
+#   main         = ソースブランチ (posts/, build_blog.py, 管理画面HTML, images/)
+#                  - 塾長は Git Gateway 経由で main の posts/ にのみ commit する
+#   gh-pages    = 公開ブランチ (force push で毎回上書き、履歴は1コミットのみ)
+#                  - GitHub Pages の Source は gh-pages / (root)
+#                  - 管理画面ファイル + 生成済み blog/ + images/ + CNAME + .nojekyll
+#
+# 利点:
+#   - main の先端は posts/ への塾長 commit でしか動かない
+#   - 並行 Actions ビルドが main を進める事象が消える
+#   - Git Gateway の base commit レース ("is at X but expected Y") が構造的に発生しない
+#   - gh-pages は force push なので conflict も発生しない
+# ====================================================================
+
 on:
   push:
     branches: [main]
@@ -7,6 +22,13 @@ on:
       - 'posts/**'
       - 'images/**'
       - 'build_blog.py'
+      - 'post.html'
+      - 'manage.html'
+      - 'login.html'
+      - 'signup.html'
+      - 'index.html'
+      - 'blog-cms.html'
+      - 'thanks.html'
       - '.github/workflows/build-blog.yml'
   workflow_dispatch:
 
@@ -21,10 +43,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
@@ -32,61 +54,79 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Build blog
+      - name: Build blog from posts/
         run: |
           python3 build_blog.py
-          echo "=== generated ==="
+          echo "=== generated dist/blog ==="
           ls -la dist/blog/ || true
 
-      - name: Sync dist/blog -> blog
+      - name: Stage gh-pages content
         run: |
-          rm -rf blog
-          cp -R dist/blog blog
-          rm -rf dist
+          set -e
+          STAGING=_gh_pages_staging
+          rm -rf "$STAGING"
+          mkdir -p "$STAGING"
 
-      - name: Commit & push (rebuild-on-conflict strategy)
+          # 管理画面 HTML 一式（main の root 直置きのもの）
+          for f in post.html manage.html login.html signup.html index.html blog-cms.html thanks.html; do
+            if [ -f "$f" ]; then
+              cp "$f" "$STAGING/"
+            fi
+          done
+
+          # 公開資産
+          cp -R dist/blog "$STAGING/blog"
+          if [ -d images ]; then
+            cp -R images "$STAGING/images"
+          fi
+
+          # 公開メタ（カスタムドメイン + Jekyll 無効化）
+          if [ -f CNAME ]; then cp CNAME "$STAGING/CNAME"; fi
+          touch "$STAGING/.nojekyll"
+
+          echo "=== staging contents ==="
+          ls -la "$STAGING/"
+
+      - name: Deploy to gh-pages (force push, orphan history)
         run: |
           set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # ====================================================================
-          # 競合耐性のある push 戦略:
-          # blog/ は build_blog.py の100%出力結果 (人間の編集物ではない) のため、
-          # rebase で過去 commit を再適用するのではなく、毎回「最新 origin/main を
-          # 取得 → posts/ を元に blog/ を再生成 → blog/ だけを差し替えて commit」
-          # する。これなら modify/delete conflict や content conflict は構造的に発生しない。
-          # ====================================================================
-          attempt_push() {
-            # 最新 origin/main に強制同期
-            git fetch origin main
-            git reset --hard origin/main
-            # build_blog.py を再実行して dist/blog を再生成
-            python3 build_blog.py
-            # 既存 blog/ を消して最新 dist/blog で置き換え
-            rm -rf blog
-            cp -R dist/blog blog
-            rm -rf dist
-            # 変更がなければスキップ
-            if [[ -z "$(git status --porcelain blog)" ]]; then
-              echo "✅ 変更なし (blog/ は既に最新)。スキップ。"
-              return 0
-            fi
-            git add blog
-            git commit -m "Kゼミ ブログ自動ビルド ($(date '+%Y-%m-%d %H:%M JST'))"
-            if git push origin main; then
-              return 0
-            fi
-            return 1
-          }
+          STAGING=_gh_pages_staging
 
-          for attempt in 1 2 3 4 5; do
-            if attempt_push; then
-              echo "✅ Push succeeded on attempt $attempt"
-              exit 0
-            fi
-            echo "⚠️ Push attempt $attempt failed (likely race with another push). Retrying with fresh build..."
-            sleep $((attempt * 2))
-          done
-          echo "❌ Push failed after 5 attempts"
-          exit 1
+          # 一時 worktree で gh-pages を構築
+          rm -rf /tmp/gh_pages_worktree
+          git worktree add --detach /tmp/gh_pages_worktree
+          cd /tmp/gh_pages_worktree
+
+          # 既存ファイルを全削除（.git は worktree なので残る）
+          git rm -rf . > /dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+
+          # ステージングからコピー
+          cp -R "$GITHUB_WORKSPACE/$STAGING/." ./
+
+          git add -A
+          # 変更があるかチェック
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "✅ 変更なし。デプロイスキップ。"
+            cd "$GITHUB_WORKSPACE"
+            git worktree remove --force /tmp/gh_pages_worktree
+            exit 0
+          fi
+
+          # orphan commit を作る（履歴を1コミットだけにする）
+          # 親なし commit を作って gh-pages に force push
+          TREE_SHA=$(git write-tree)
+          COMMIT_MSG="Kゼミ ブログ公開ビルド ($(date '+%Y-%m-%d %H:%M JST'))"
+          COMMIT_SHA=$(git commit-tree "$TREE_SHA" -m "$COMMIT_MSG")
+          git update-ref refs/heads/gh-pages "$COMMIT_SHA"
+
+          # force push (gh-pages は公開対象、履歴保持不要)
+          git push --force origin gh-pages
+
+          cd "$GITHUB_WORKSPACE"
+          git worktree remove --force /tmp/gh_pages_worktree
+
+          echo "✅ gh-pages に公開ビルドを force push しました"
