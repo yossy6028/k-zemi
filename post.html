@@ -664,14 +664,46 @@
         };
         if (existingSha) putBody.sha = existingSha;
 
-        const { res: putRes, data: putData } = await fetchWithJson(GIT_GATEWAY_BASE + '/contents/' + filepath, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + accessToken,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(putBody)
-        });
+        // Git Gateway の base commit レースに耐えるためのリトライ。
+        // 並行 Actions ビルド等で main 先端が進むと「is at X but expected Y」型 422 が返る。
+        // 422/409 時は最新の sha を再取得してから PUT を再試行する。
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        let putRes, putData;
+        let currentSha = existingSha;
+        let attempt = 0;
+        for (attempt = 0; attempt < 3; attempt++) {
+          if (currentSha) putBody.sha = currentSha; else delete putBody.sha;
+          const result = await fetchWithJson(GIT_GATEWAY_BASE + '/contents/' + filepath, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + accessToken,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(putBody)
+          });
+          putRes = result.res;
+          putData = result.data;
+          if (putRes.ok) break;
+          // base commit / sha レース系は最新 sha を取り直してリトライ
+          if (attempt < 2 && (putRes.status === 422 || putRes.status === 409 || putRes.status === 429 || putRes.status >= 500)) {
+            // 最新 sha を再取得
+            try {
+              const recheck = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main&_=' + Date.now(), {
+                headers: { 'Authorization': 'Bearer ' + accessToken },
+                cache: 'no-store'
+              });
+              if (recheck.ok) {
+                const rdata = await recheck.json();
+                currentSha = rdata.sha;
+              } else if (recheck.status === 404) {
+                currentSha = null; // 新規作成扱い
+              }
+            } catch (e) { /* ネットワーク失敗は次の loop で扱う */ }
+            await wait(900 * (attempt + 1));
+            continue;
+          }
+          break;
+        }
 
         if (!putRes.ok) {
           throw new Error(humanizeApiError(putRes.status, putData, isEditMode ? '記事の更新' : '記事の保存'));

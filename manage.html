@@ -358,6 +358,61 @@
       return btoa(bin);
     }
 
+    // Git Gateway PUT は並行 Actions ビルドで base commit が進むと「is at X but expected Y」型 422 を返す。
+    // 422/409/429/5xx は最新 sha を取り直して最大3回リトライする共通ヘルパ。
+    async function putContentWithRetry(accessToken, filepath, contentBase64, message, opts) {
+      opts = opts || {};
+      const wait = ms => new Promise(r => setTimeout(r, ms));
+      let currentSha = opts.expectedSha || null;
+      let lastError = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const body = {
+          message: message,
+          content: contentBase64,
+          branch: 'main'
+        };
+        if (currentSha) body.sha = currentSha;
+        let res, data;
+        try {
+          res = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          data = await res.json().catch(() => ({}));
+        } catch (netErr) {
+          lastError = new Error('ネットワークエラー: ' + (netErr.message || netErr));
+          if (attempt < 2) { await wait(900 * (attempt + 1)); continue; }
+          throw lastError;
+        }
+        if (res.ok) return data;
+        // PUT 後に同内容で既に存在するかチェック（並行操作で先に作られた）
+        if (res.status === 422 || res.status === 409) {
+          try {
+            const v = await fetch(GIT_GATEWAY_BASE + '/contents/' + filepath + '?ref=main&_=' + Date.now(), {
+              headers: { 'Authorization': 'Bearer ' + accessToken },
+              cache: 'no-store'
+            });
+            if (v.ok) {
+              const vd = await v.json().catch(() => null);
+              const vc = vd && vd.content ? vd.content.replace(/\s/g, '') : '';
+              if (vc === contentBase64) return vd; // 既に同内容で保存済み
+              currentSha = vd ? vd.sha : currentSha; // 最新 sha を取得して再試行
+            } else if (v.status === 404) {
+              currentSha = null;
+            }
+          } catch (e) { /* リトライへ */ }
+        }
+        lastError = new Error(humanizeApiError(res.status, data, opts.context || 'ファイルの保存'));
+        if (attempt < 2 && (res.status === 422 || res.status === 409 || res.status === 429 || res.status >= 500)) {
+          await wait(900 * (attempt + 1));
+          continue;
+        }
+        throw lastError;
+      }
+      throw lastError || new Error('ファイルの保存に失敗しました');
+    }
+
     // 物理削除（最終的な完全消去用。アーカイブ内ファイルへの「永久削除」操作で使う）
     async function hardDeleteFile(accessToken, filepath, sha, message) {
       let deleteSha = sha;
@@ -473,24 +528,10 @@
         throw new Error(humanizeApiError(checkRes.status, data, 'アーカイブ重複確認'));
       }
 
-      // 3) アーカイブへ PUT
+      // 3) アーカイブへ PUT（base commit レース対策の共通ヘルパ経由）
       if (!archiveAlreadyExists) {
-        const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + archivePath, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + accessToken,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            message: '記事をアーカイブ: ' + slug,
-            content: contentBase64,
-            branch: 'main'
-          })
-        });
-        if (!putRes.ok) {
-          const data = await putRes.json().catch(() => ({}));
-          throw new Error(humanizeApiError(putRes.status, data, 'アーカイブへの保存'));
-        }
+        await putContentWithRetry(accessToken, archivePath, contentBase64,
+          '記事をアーカイブ: ' + slug, { context: 'アーカイブへの保存' });
       }
 
       // 4) 元を削除
@@ -535,36 +576,13 @@
           return null;
         }
         const existingSha = (await checkRes.json()).sha;
-        // 既存を上書き PUT
-        const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + destPath, {
-          method: 'PUT',
-          headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: '記事をアーカイブから復元(上書き): ' + slug,
-            content: contentBase64,
-            sha: existingSha,
-            branch: 'main'
-          })
-        });
-        if (!putRes.ok) {
-          const data = await putRes.json().catch(() => ({}));
-          throw new Error(humanizeApiError(putRes.status, data, '記事の復元(上書き)'));
-        }
+        await putContentWithRetry(accessToken, destPath, contentBase64,
+          '記事をアーカイブから復元(上書き): ' + slug,
+          { expectedSha: existingSha, context: '記事の復元(上書き)' });
       } else {
-        // 新規作成
-        const putRes = await fetch(GIT_GATEWAY_BASE + '/contents/' + destPath, {
-          method: 'PUT',
-          headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: '記事をアーカイブから復元: ' + slug,
-            content: contentBase64,
-            branch: 'main'
-          })
-        });
-        if (!putRes.ok) {
-          const data = await putRes.json().catch(() => ({}));
-          throw new Error(humanizeApiError(putRes.status, data, '記事の復元'));
-        }
+        await putContentWithRetry(accessToken, destPath, contentBase64,
+          '記事をアーカイブから復元: ' + slug,
+          { context: '記事の復元' });
       }
 
       // 4) アーカイブ元を削除
