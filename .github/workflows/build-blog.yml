@@ -44,29 +44,48 @@ jobs:
           cp -R dist/blog blog
           rm -rf dist
 
-      - name: Commit & push (with rebase + retry)
+      - name: Commit & push (rebuild-on-conflict strategy)
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [[ -z "$(git status --porcelain blog)" ]]; then
-            echo "変更なし。スキップ。"
-            exit 0
-          fi
-          git add blog
-          git commit -m "Kゼミ ブログ自動ビルド ($(date '+%Y-%m-%d %H:%M JST'))"
-          # 競合耐性: pull --rebase + push を最大5回リトライ
-          for attempt in 1 2 3 4 5; do
+
+          # ====================================================================
+          # 競合耐性のある push 戦略:
+          # blog/ は build_blog.py の100%出力結果 (人間の編集物ではない) のため、
+          # rebase で過去 commit を再適用するのではなく、毎回「最新 origin/main を
+          # 取得 → posts/ を元に blog/ を再生成 → blog/ だけを差し替えて commit」
+          # する。これなら modify/delete conflict や content conflict は構造的に発生しない。
+          # ====================================================================
+          attempt_push() {
+            # 最新 origin/main に強制同期
+            git fetch origin main
+            git reset --hard origin/main
+            # build_blog.py を再実行して dist/blog を再生成
+            python3 build_blog.py
+            # 既存 blog/ を消して最新 dist/blog で置き換え
+            rm -rf blog
+            cp -R dist/blog blog
+            rm -rf dist
+            # 変更がなければスキップ
+            if [[ -z "$(git status --porcelain blog)" ]]; then
+              echo "✅ 変更なし (blog/ は既に最新)。スキップ。"
+              return 0
+            fi
+            git add blog
+            git commit -m "Kゼミ ブログ自動ビルド ($(date '+%Y-%m-%d %H:%M JST'))"
             if git push origin main; then
+              return 0
+            fi
+            return 1
+          }
+
+          for attempt in 1 2 3 4 5; do
+            if attempt_push; then
               echo "✅ Push succeeded on attempt $attempt"
               exit 0
             fi
-            echo "⚠️ Push attempt $attempt failed, fetching latest and rebasing..."
-            git fetch origin main
-            git rebase origin/main || {
-              echo "❌ Rebase failed; resetting and retrying"
-              git rebase --abort || true
-              git pull --rebase origin main || exit 1
-            }
+            echo "⚠️ Push attempt $attempt failed (likely race with another push). Retrying with fresh build..."
             sleep $((attempt * 2))
           done
           echo "❌ Push failed after 5 attempts"
