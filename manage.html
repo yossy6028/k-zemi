@@ -654,7 +654,14 @@
             const accessToken = await refreshTokenIfNeeded(user);
             if (!accessToken) throw new Error('ログインが切れています。再ログインしてください。');
             await archivePost(accessToken, filename, slug);
-            showAlert('✅ ゴミ箱に移動しました: ' + escapeHtml(slug) + '<br>約1〜2分後にブログサイトから消えます。間違えた場合は画面下の「🗑 ゴミ箱（アーカイブ）」から元に戻せます。', 'success');
+            showAlert(
+              '✅ ゴミ箱に移動しました: ' + escapeHtml(slug) +
+              '<br><strong>処理は完了しています。</strong>追加で削除ボタンを押す必要はありません。' +
+              '<br>ブログサイトへの反映目安: 通常1〜2分 / ブラウザに古い表示が残っている場合 最大10分。' +
+              '<br>すぐ確認したい場合は強制再読込してください（PC: Ctrl+Shift+R / Mac: ⌘+Shift+R / iPhone Safari: 設定→Safari→履歴とWebサイトデータを消去）。' +
+              '<br>間違えた場合は画面下の「🗑 ゴミ箱（アーカイブ）」から元に戻せます。',
+              'success'
+            );
             setTimeout(() => loadAndRender(), 800);
           } catch (err) {
             showAlert('⚠️ ' + escapeHtml(err.message || String(err)), 'error');
@@ -704,7 +711,7 @@
         btn.addEventListener('click', async () => {
           const archiveFilename = btn.dataset.archive;
           const slug = btn.dataset.slug;
-          if (!confirm('「' + slug + '」を復元しますか？\n\n復元すると約1〜2分後にブログサイトに再表示されます。')) return;
+          if (!confirm('「' + slug + '」を復元しますか？\n\n復元するとブログサイトに再表示されます。\n反映目安: 通常1〜2分 / ブラウザに古い表示が残っている場合は最大10分。')) return;
           btn.disabled = true;
           btn.textContent = '復元中…';
           try {
@@ -713,7 +720,13 @@
             if (!accessToken) throw new Error('ログインが切れています。');
             const restoredSlug = await restoreFromArchive(accessToken, archiveFilename);
             if (restoredSlug) {
-              showAlert('✅ 復元しました: ' + escapeHtml(restoredSlug) + '<br>約1〜2分後にブログサイトに再表示されます。', 'success');
+              showAlert(
+                '✅ 復元しました: ' + escapeHtml(restoredSlug) +
+                '<br><strong>処理は完了しています。</strong>追加で復元ボタンを押す必要はありません。' +
+                '<br>ブログサイトへの再表示目安: 通常1〜2分 / ブラウザに古い表示が残っている場合 最大10分。' +
+                '<br>すぐ確認したい場合は強制再読込してください（PC: Ctrl+Shift+R / Mac: ⌘+Shift+R / iPhone Safari: 設定→Safari→履歴とWebサイトデータを消去）。',
+                'success'
+              );
               setTimeout(() => loadAndRender(), 800);
             } else {
               btn.disabled = false;

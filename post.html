@@ -212,7 +212,10 @@
       <div class="card" style="background:#FFFBEB;border-left:4px solid #F59E0B">
         <p style="font-size:0.88rem;color:#92400E">
           <strong>💡 公開後について</strong><br>
-          公開ボタンを押すと、記事は GitHub に自動保存され、約1〜2分後にブログサイトに反映されます。
+          公開ボタンを押すと、記事は GitHub に自動保存されます。<br>
+          ブログサイトへの反映目安: <strong>通常1〜2分 / ブラウザに古い表示が残っている場合 最大10分</strong>。<br>
+          すぐ確認したい場合は強制再読込してください（PC: Ctrl+Shift+R / Mac: ⌘+Shift+R / iPhone Safari: 設定→Safari→履歴とWebサイトデータを消去）。<br>
+          画面上部に <strong>「✅ 公開しました！」</strong> と緑色で表示されれば処理は確実に完了しています。追加で公開ボタンを押す必要はありません。
           反映後は <a href="/blog/" style="color:#1B5E20;font-weight:700">ブログ一覧</a> でご確認いただけます。
         </p>
       </div>
@@ -712,7 +715,10 @@
         const commitSha = putData.commit?.sha?.substring(0, 7) || '';
         if (alertBox) {
           const action = existingSha ? '更新' : '新規作成';
-          let msg = '<div class="alert alert-success">✅ ' + action + 'しました！(' + slug + ', commit ' + commitSha + ')<br>約1〜2分後にブログサイトに反映されます。';
+          let msg = '<div class="alert alert-success">✅ ' + action + 'しました！(' + slug + ', commit ' + commitSha + ')' +
+            '<br><strong>処理は完了しています。</strong>追加で公開ボタンを押す必要はありません。' +
+            '<br>ブログサイトへの反映目安: 通常1〜2分 / ブラウザに古い表示が残っている場合 最大10分。' +
+            '<br>すぐ確認したい場合は強制再読込してください（PC: Ctrl+Shift+R / Mac: ⌘+Shift+R / iPhone Safari: 設定→Safari→履歴とWebサイトデータを消去）。';
           if (isEditMode) {
             msg += '<br><a href="/manage.html" style="color:#1B5E20;font-weight:700">📂 投稿一覧に戻る</a>';
           }
