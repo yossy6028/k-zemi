@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Kゼミ ブログ記事 投稿</title>
   <link rel="icon" href="/images/favicon.png">
   <!-- EasyMDE: ボタン式 Markdown エディタ (太字/見出し/リスト等を視覚的操作) -->
@@ -135,15 +138,19 @@
       <div id="alertBox"></div>
 
       <div class="card">
-        <form id="postForm">
+        <!-- novalidate: ブラウザ標準のフォーム検証を完全に無効化する。
+             理由: required や pattern で失敗するとブラウザは "submit を silent cancel"
+             するだけで何も表示しないことがある（特にモバイルや、focus 先がスクロール外）。
+             下の handlePublish 内で手動 validation を行い、必ず alertBox に日本語エラーを出す。 -->
+        <form id="postForm" novalidate>
           <label for="title">記事タイトル <span style="color:#C00">＊</span></label>
-          <input type="text" id="title" required placeholder="例: 夏期講習のお知らせ">
+          <input type="text" id="title" placeholder="例: 夏期講習のお知らせ">
           <p class="hint">25文字前後を推奨。一覧やSNSでの見出しに使われます。</p>
 
           <div class="row">
             <div>
               <label for="category">カテゴリ <span style="color:#C00">＊</span></label>
-              <select id="category" required>
+              <select id="category">
                 <option value="お知らせ">お知らせ</option>
                 <option value="学習コラム">学習コラム</option>
                 <option value="受験情報">受験情報</option>
@@ -152,14 +159,14 @@
             </div>
             <div>
               <label for="date">公開日 <span style="color:#C00">＊</span></label>
-              <input type="text" id="date" required placeholder="例: 2026年6月1日">
+              <input type="text" id="date" placeholder="例: 2026年6月1日">
             </div>
           </div>
 
           <div class="row">
             <div>
               <label for="slug">URL用ID（半角英数字+ハイフン）</label>
-              <input type="text" id="slug" pattern="[a-z0-9-]+" placeholder="例: summer-2026">
+              <input type="text" id="slug" placeholder="例: summer-2026">
               <p class="hint">空欄なら自動生成されます</p>
             </div>
             <div>
@@ -185,6 +192,9 @@
 
           <button type="submit" class="btn-primary" id="publishBtn">📤 公開する（GitHub に保存）</button>
         </form>
+        <p style="text-align:center;font-size:0.72rem;color:#A0AEC0;margin-top:10px">
+          ver 2026-05-25-r3 / ボタンが反応しない場合は管理担当（吉井）までご連絡ください
+        </p>
       </div>
 
       <div class="card" style="background:#FFFBEB;border-left:4px solid #F59E0B">
@@ -291,66 +301,72 @@
     }
     function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
 
-    // 初期化
-    const user = getStoredUser();
-    if (!user) {
-      document.getElementById('loginView').style.display = 'block';
-    } else {
-      document.getElementById('postView').style.display = 'block';
-      document.getElementById('userEmail').textContent = user.email || '';
-      document.getElementById('date').value = todayJP();
+    // 初期化（全体を try/catch でラップして「init エラーで submit listener が登録されない」事態を防ぐ）
+    try {
+      const user = getStoredUser();
+      if (!user) {
+        document.getElementById('loginView').style.display = 'block';
+      } else {
+        document.getElementById('postView').style.display = 'block';
+        document.getElementById('userEmail').textContent = user.email || '';
+        document.getElementById('date').value = todayJP();
 
-      // EasyMDE: ボタン式 Markdown エディタ (太字/見出し/リスト等)
-      try {
-        easymde = new EasyMDE({
-          element: document.getElementById('body'),
-          spellChecker: false,
-          status: false,
-          minHeight: '320px',
-          placeholder: 'ここに記事本文を書いてください。ツールバーのボタンで太字や見出しを挿入できます。',
-          toolbar: [
-            { name: 'bold', action: EasyMDE.toggleBold, className: 'fa fa-bold', title: '太字' },
-            { name: 'italic', action: EasyMDE.toggleItalic, className: 'fa fa-italic', title: '斜体' },
-            { name: 'heading-2', action: EasyMDE.toggleHeading2, className: 'fa fa-header', title: '大見出し' },
-            { name: 'heading-3', action: EasyMDE.toggleHeading3, className: 'fa fa-header', title: '小見出し' },
-            '|',
-            { name: 'unordered-list', action: EasyMDE.toggleUnorderedList, className: 'fa fa-list-ul', title: '箇条書き' },
-            { name: 'ordered-list', action: EasyMDE.toggleOrderedList, className: 'fa fa-list-ol', title: '番号付きリスト' },
-            { name: 'quote', action: EasyMDE.toggleBlockquote, className: 'fa fa-quote-left', title: '引用' },
-            '|',
-            { name: 'link', action: EasyMDE.drawLink, className: 'fa fa-link', title: 'リンク' },
-            '|',
-            { name: 'preview', action: EasyMDE.togglePreview, className: 'fa fa-eye no-disable', title: 'プレビュー' }
-          ]
+        // EasyMDE: ボタン式 Markdown エディタ (太字/見出し/リスト等)
+        try {
+          easymde = new EasyMDE({
+            element: document.getElementById('body'),
+            spellChecker: false,
+            status: false,
+            minHeight: '320px',
+            placeholder: 'ここに記事本文を書いてください。ツールバーのボタンで太字や見出しを挿入できます。',
+            toolbar: [
+              { name: 'bold', action: EasyMDE.toggleBold, className: 'fa fa-bold', title: '太字' },
+              { name: 'italic', action: EasyMDE.toggleItalic, className: 'fa fa-italic', title: '斜体' },
+              { name: 'heading-2', action: EasyMDE.toggleHeading2, className: 'fa fa-header', title: '大見出し' },
+              { name: 'heading-3', action: EasyMDE.toggleHeading3, className: 'fa fa-header', title: '小見出し' },
+              '|',
+              { name: 'unordered-list', action: EasyMDE.toggleUnorderedList, className: 'fa fa-list-ul', title: '箇条書き' },
+              { name: 'ordered-list', action: EasyMDE.toggleOrderedList, className: 'fa fa-list-ol', title: '番号付きリスト' },
+              { name: 'quote', action: EasyMDE.toggleBlockquote, className: 'fa fa-quote-left', title: '引用' },
+              '|',
+              { name: 'link', action: EasyMDE.drawLink, className: 'fa fa-link', title: 'リンク' },
+              '|',
+              { name: 'preview', action: EasyMDE.togglePreview, className: 'fa fa-eye no-disable', title: 'プレビュー' }
+            ]
+          });
+          // 下書き自動保存 (3秒間隔)
+          easymde.codemirror.on('change', () => { saveDraft(); });
+        } catch (e) {
+          console.warn('EasyMDE init failed, fallback to textarea:', e);
+        }
+
+        // 他のフィールドも変更時に下書き保存
+        ['title','slug','category','date','heroLabel','tags'].forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.addEventListener('input', saveDraft);
+          el.addEventListener('change', saveDraft);
         });
-        // 下書き自動保存 (3秒間隔)
-        easymde.codemirror.on('change', () => { saveDraft(); });
-      } catch (e) {
-        console.warn('EasyMDE init failed, fallback to textarea:', e);
-      }
 
-      // 他のフィールドも変更時に下書き保存
-      ['title','slug','category','date','heroLabel','tags'].forEach(id => {
-        document.getElementById(id).addEventListener('input', saveDraft);
-        document.getElementById(id).addEventListener('change', saveDraft);
-      });
-
-      // 下書き復元
-      const draft = loadDraft();
-      if (draft && (draft.title || draft.body)) {
-        if (confirm('前回保存した下書きがあります。復元しますか？\n（保存時刻: ' + (draft.savedAt || '不明') + '）')) {
-          document.getElementById('title').value = draft.title || '';
-          document.getElementById('slug').value = draft.slug || '';
-          document.getElementById('category').value = draft.category || 'お知らせ';
-          document.getElementById('date').value = draft.date || todayJP();
-          document.getElementById('heroLabel').value = draft.heroLabel || '新着';
-          document.getElementById('tags').value = draft.tags || '';
-          if (easymde) easymde.value(draft.body || '');
-          else document.getElementById('body').value = draft.body || '';
-        } else {
-          clearDraft();
+        // 下書き復元
+        const draft = loadDraft();
+        if (draft && (draft.title || draft.body)) {
+          if (confirm('前回保存した下書きがあります。復元しますか？\n（保存時刻: ' + (draft.savedAt || '不明') + '）')) {
+            document.getElementById('title').value = draft.title || '';
+            document.getElementById('slug').value = draft.slug || '';
+            document.getElementById('category').value = draft.category || 'お知らせ';
+            document.getElementById('date').value = draft.date || todayJP();
+            document.getElementById('heroLabel').value = draft.heroLabel || '新着';
+            document.getElementById('tags').value = draft.tags || '';
+            if (easymde) easymde.value(draft.body || '');
+            else document.getElementById('body').value = draft.body || '';
+          } else {
+            clearDraft();
+          }
         }
       }
+    } catch (initErr) {
+      console.error('[post.html] init error (publish flow still functional):', initErr);
     }
 
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
@@ -360,33 +376,58 @@
       }
     });
 
-    document.getElementById('postForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    // ========== 公開ハンドラ ==========
+    // 二重発火防止フラグ（submit と click 両方にバインドするため）
+    let _publishing = false;
+
+    async function handlePublish(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (_publishing) return;
+      _publishing = true;
+
       const btn = document.getElementById('publishBtn');
       const alertBox = document.getElementById('alertBox');
-      btn.disabled = true;
-      btn.textContent = '保存中...';
-      alertBox.innerHTML = '';
+      // クリック直後の視覚フィードバック（塾長が「ボタン反応した」と分かるように）
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '保存中...';
+      }
+      if (alertBox) {
+        alertBox.innerHTML = '<div class="alert alert-info">📤 公開処理中です…GitHub に保存しています。</div>';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // ログインユーザーを毎回 localStorage から取得（init 状態に依存しない）
+      const user = getStoredUser();
+      if (!user || !user.token) {
+        if (alertBox) {
+          alertBox.innerHTML = '<div class="alert alert-error">ログインが切れています。ログイン画面に戻ります...</div>';
+          alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        setTimeout(() => location.href = '/login.html', 2000);
+        _publishing = false;
+        return;
+      }
 
       try {
-        const title = document.getElementById('title').value.trim();
-        const category = document.getElementById('category').value;
-        const date = document.getElementById('date').value.trim();
-        let slug = document.getElementById('slug').value.trim();
-        const heroLabel = document.getElementById('heroLabel').value.trim() || '新着';
-        const tags = document.getElementById('tags').value.trim();
-        const body = easymde ? easymde.value() : document.getElementById('body').value;
+        const title = (document.getElementById('title')?.value || '').trim();
+        const category = document.getElementById('category')?.value || '';
+        const date = (document.getElementById('date')?.value || '').trim();
+        let slug = (document.getElementById('slug')?.value || '').trim();
+        const heroLabel = (document.getElementById('heroLabel')?.value || '').trim() || '新着';
+        const tags = (document.getElementById('tags')?.value || '').trim();
+        const body = easymde ? easymde.value() : (document.getElementById('body')?.value || '');
 
-        // 手動 validation (textarea required を外したため)
-        if (!title.trim()) throw new Error('記事タイトルを入力してください');
+        // 手動 validation（novalidate で HTML5 検証を無効化しているため、ここで完結）
+        if (!title) throw new Error('記事タイトルを入力してください');
         if (!category) throw new Error('カテゴリを選択してください');
-        if (!date.trim()) throw new Error('公開日を入力してください');
+        if (!date) throw new Error('公開日を入力してください');
         if (!body.trim()) throw new Error('記事本文を入力してください');
 
         if (!slug) slug = generateSlug(title);
         // slug の英数字チェック
         if (!/^[a-z0-9-]+$/.test(slug)) {
-          throw new Error('slug は半角英数字とハイフンのみ使えます: ' + slug);
+          throw new Error('URL用ID（slug）は半角英数字とハイフンのみ使えます。「' + slug + '」は使えません。空欄にすればタイトルから自動生成されます。');
         }
 
         // Markdown 構築
@@ -408,8 +449,12 @@
         // access_token 取得 (必要なら refresh)
         const accessToken = await refreshTokenIfNeeded(user);
         if (!accessToken) {
-          alertBox.innerHTML = '<div class="alert alert-error">セッションが切れました。再ログインしてください。</div>';
-          setTimeout(() => location.href = '/signup.html', 2000);
+          if (alertBox) {
+            alertBox.innerHTML = '<div class="alert alert-error">セッションが切れました。再ログインしてください。</div>';
+            alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          setTimeout(() => location.href = '/login.html', 2000);
+          _publishing = false;
           return;
         }
 
@@ -423,8 +468,8 @@
           const existing = await checkRes.json();
           existingSha = existing.sha;
           if (!confirm('「' + slug + '」というIDの記事が既に存在します。上書きしますか？\n（記事を更新したい場合は「OK」、別記事として新規作成したい場合は「キャンセル」を押してID/タイトルを変えてください）')) {
-            btn.disabled = false;
-            btn.textContent = '📤 公開する（GitHub に保存）';
+            if (btn) { btn.disabled = false; btn.textContent = '📤 公開する（GitHub に保存）'; }
+            _publishing = false;
             return;
           }
         }
@@ -461,22 +506,40 @@
         }
 
         const commitSha = putData.commit?.sha?.substring(0, 7) || '';
-        alertBox.innerHTML = '<div class="alert alert-success">✅ 公開しました！(' + (existingSha ? '更新' : '新規作成') + ': ' + slug + ', commit ' + commitSha + ')<br>約1〜2分後にブログサイトに反映されます。</div>';
+        if (alertBox) {
+          alertBox.innerHTML = '<div class="alert alert-success">✅ 公開しました！(' + (existingSha ? '更新' : '新規作成') + ': ' + slug + ', commit ' + commitSha + ')<br>約1〜2分後にブログサイトに反映されます。</div>';
+        }
         // 公開成功 → 下書きクリア + フォームリセット
         clearDraft();
-        document.getElementById('title').value = '';
-        document.getElementById('slug').value = '';
-        document.getElementById('tags').value = '';
+        const t = document.getElementById('title'); if (t) t.value = '';
+        const s = document.getElementById('slug'); if (s) s.value = '';
+        const tg = document.getElementById('tags'); if (tg) tg.value = '';
         if (easymde) easymde.value('');
-        btn.textContent = '📤 公開する（GitHub に保存）';
-        btn.disabled = false;
+        if (btn) { btn.textContent = '📤 公開する（GitHub に保存）'; btn.disabled = false; }
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
-        alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + (err.message || err) + '</div>';
-        btn.disabled = false;
-        btn.textContent = '📤 公開する（GitHub に保存）';
-        console.error('publish error:', err);
+        if (alertBox) {
+          alertBox.innerHTML = '<div class="alert alert-error">⚠️ ' + (err.message || err) + '</div>';
+          alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (btn) { btn.disabled = false; btn.textContent = '📤 公開する（GitHub に保存）'; }
+        console.error('[publish] error:', err);
+      } finally {
+        _publishing = false;
       }
+    } // end handlePublish
+
+    // ========== リスナー登録（init より前に確実に登録） ==========
+    // 1) form submit（主経路）
+    document.getElementById('postForm')?.addEventListener('submit', handlePublish);
+    // 2) button click（保険：submit が何らかの理由で発火しない場合の最終フォールバック）
+    //    form の中の type="submit" ボタンなので通常は submit が先に発火するが、
+    //    handlePublish 内に _publishing フラグがあるため二重実行はしない
+    document.getElementById('publishBtn')?.addEventListener('click', (e) => {
+      // submit 経由で既に処理中なら何もしない
+      if (_publishing) return;
+      // submit イベントが直後に発火するのを待ち、発火しなければ手動で呼ぶ
+      setTimeout(() => { if (!_publishing) handlePublish(e); }, 50);
     });
   </script>
 </body>
