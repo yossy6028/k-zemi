@@ -737,7 +737,81 @@ def main():
     with open(blog_index, "w", encoding="utf-8") as f:
         f.write(render_index_page(posts))
     print(f"  ✓ blog/index.html (記事 {len(posts)} 件)")
+
+    # 本体 index.html の「最新のお知らせ・ブログ」セクションを最新3件で更新
+    update_main_index_latest_posts(posts)
+
     print("\n完了。次はデプロイ用に dist/blog/ を deploy-edushift-samples/ にコピーしてください。")
+
+
+def update_main_index_latest_posts(posts):
+    """本体 index.html の <!-- LATEST_POSTS_START --> 〜 <!-- LATEST_POSTS_END --> を
+    posts の最新3件のカードに置換し、dist/index.html として出力する。
+    workflow の Stage gh-pages content ステップで dist/index.html を優先採用する。"""
+    src_path = os.path.join(BASE, "index.html")
+    if not os.path.exists(src_path):
+        print("  ! 本体 index.html が見つかりません。スキップ。")
+        return
+
+    with open(src_path, encoding="utf-8") as f:
+        html = f.read()
+
+    start_marker = "<!-- LATEST_POSTS_START -->"
+    end_marker = "<!-- LATEST_POSTS_END -->"
+    s_idx = html.find(start_marker)
+    e_idx = html.find(end_marker)
+    if s_idx < 0 or e_idx < 0 or e_idx < s_idx:
+        print("  ! index.html に LATEST_POSTS マーカーが見つかりません。スキップ。")
+        return
+
+    top = posts[:3]  # 最新3件
+    cards = []
+    for p in top:
+        fm = p["fm"]
+        slug = _safe_slug(fm.get("slug", ""))
+        if not slug:
+            continue
+        title = esc(fm.get("title", ""))
+        category = esc(fm.get("category", "お知らせ"))
+        date = esc(fm.get("date", ""))
+        # カテゴリ色は本体HPでは accent (#C9A227) で統一（HP全体の意匠維持）
+        cards.append(
+            f'<a href="./blog/{slug}/index.html" class="latest-post-card" '
+            f'style="display:block;background:#fff;border-radius:12px;padding:24px 28px;'
+            f'border-left:5px solid #C9A227;box-shadow:0 6px 24px rgba(0,0,0,.06);'
+            f'text-decoration:none;color:inherit;transition:transform .25s, box-shadow .25s;'
+            f'margin-bottom:14px">\n'
+            f'  <div style="font-size:.78rem;color:#C9A227;font-weight:700;'
+            f'letter-spacing:.05em;margin-bottom:8px">{category} ・ {date}</div>\n'
+            f'  <h3 style="font-family:\'Noto Serif JP\',serif;font-size:clamp(1.05rem,2.4vw,1.2rem);'
+            f'line-height:1.55;font-weight:700;color:#0D3311;margin-bottom:10px">{title}</h3>\n'
+            f'  <span style="display:inline-block;color:#1B5E20;font-size:.9rem;font-weight:600">続きを読む &#10132;</span>\n'
+            f'</a>'
+        )
+
+    if not cards:
+        # 記事0件のフォールバック
+        replacement = (
+            '<p style="text-align:center;color:#718096;padding:30px 0">'
+            'お知らせを準備中です。'
+            '</p>'
+        )
+    else:
+        replacement = "\n    ".join(cards)
+
+    new_html = (
+        html[: s_idx + len(start_marker)]
+        + "\n    <!-- このマーカー間は build_blog.py が posts/ の最新3件で自動置換します。手で編集しないでください。 -->\n    "
+        + replacement
+        + "\n    "
+        + html[e_idx:]
+    )
+
+    out_path = os.path.join(DIST_DIR, "index.html")
+    os.makedirs(DIST_DIR, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(new_html)
+    print(f"  ✓ index.html (本体HPの最新お知らせ {len(cards)} 件で更新)")
 
 
 if __name__ == "__main__":

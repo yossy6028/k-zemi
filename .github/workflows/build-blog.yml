@@ -74,6 +74,12 @@ jobs:
             fi
           done
 
+          # dist/index.html (build_blog.py が最新3件で書き換えた本体HP) があれば上書き
+          if [ -f dist/index.html ]; then
+            cp dist/index.html "$STAGING/index.html"
+            echo "✓ dist/index.html (最新3件反映版) を採用"
+          fi
+
           # 公開資産
           cp -R dist/blog "$STAGING/blog"
           if [ -d images ]; then
