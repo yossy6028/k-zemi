@@ -29,6 +29,7 @@ on:
       - 'index.html'
       - 'blog-cms.html'
       - 'thanks.html'
+      - 'robots.txt'
       - '.github/workflows/build-blog.yml'
   workflow_dispatch:
 
@@ -89,6 +90,18 @@ jobs:
           # 公開メタ（カスタムドメイン + Jekyll 無効化）
           if [ -f CNAME ]; then cp CNAME "$STAGING/CNAME"; fi
           touch "$STAGING/.nojekyll"
+
+          # SEO 資産: robots.txt (静的)
+          if [ -f robots.txt ]; then
+            cp robots.txt "$STAGING/robots.txt"
+            echo "✓ robots.txt をコピー"
+          fi
+
+          # SEO 資産: sitemap.xml (build_blog.py が posts/ から動的生成)
+          if [ -f dist/sitemap.xml ]; then
+            cp dist/sitemap.xml "$STAGING/sitemap.xml"
+            echo "✓ dist/sitemap.xml をコピー"
+          fi
 
           echo "=== staging contents ==="
           ls -la "$STAGING/"

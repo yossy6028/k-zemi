@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /post.html
+Disallow: /manage.html
+Disallow: /login.html
+Disallow: /signup.html
+Disallow: /blog-cms.html
+Disallow: /thanks.html
+
+Sitemap: https://k-zemi.net/sitemap.xml

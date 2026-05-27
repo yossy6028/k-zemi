@@ -472,6 +472,15 @@ def render_post_page(post, related_posts):
     category_esc = esc(fm.get("category", ""))
     date_esc = esc(fm.get("date", ""))
     read_time_esc = esc(fm.get("read_time", "約5分"))
+    slug_safe = _safe_slug(fm.get("slug", ""))
+    canonical_url = f"https://k-zemi.net/blog/{slug_safe}/" if slug_safe else "https://k-zemi.net/blog/"
+    # date を ISO 形式に変換（JSON-LD datePublished 用）
+    raw_date = fm.get("date", "")
+    try:
+        _d = raw_date.replace("年", "-").replace("月", "-").replace("日", "")
+        iso_date = datetime.datetime.strptime(_d, "%Y-%m-%d").date().isoformat()
+    except Exception:
+        iso_date = datetime.date.today().isoformat()
     lead_for_meta_raw = ""
     for b in blocks:
         if b["type"] == "p":
@@ -482,6 +491,27 @@ def render_post_page(post, related_posts):
     lead_for_meta_text = html_lib.unescape(lead_for_meta_raw)
     lead_for_meta = esc(lead_for_meta_text)
 
+    # JSON-LD: Article 型 (ブログ記事を Google が構造化データとして認識する)
+    import json as _json
+    article_jsonld = _json.dumps({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": raw_title,
+        "description": lead_for_meta_text,
+        "image": "https://k-zemi.net/images/ogp.jpg",
+        "datePublished": iso_date,
+        "dateModified": iso_date,
+        "author": {"@type": "Organization", "name": SCHOOL_NAME, "url": "https://k-zemi.net/"},
+        "publisher": {
+            "@type": "Organization",
+            "name": SCHOOL_NAME,
+            "logo": {"@type": "ImageObject", "url": "https://k-zemi.net/images/favicon.png"}
+        },
+        "mainEntityOfPage": {"@type": "WebPage", "@id": canonical_url},
+        "url": canonical_url,
+        "articleSection": fm.get("category", "お知らせ")
+    }, ensure_ascii=False)
+
     page = f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -489,9 +519,33 @@ def render_post_page(post, related_posts):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title_esc}｜{SCHOOL_NAME} 中野校</title>
 <meta name="description" content="{lead_for_meta}">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{canonical_url}">
+<link rel="icon" type="image/png" href="/images/favicon.png">
+<link rel="apple-touch-icon" href="/images/favicon.png">
+
+<!-- Open Graph -->
 <meta property="og:title" content="{title_esc}">
 <meta property="og:description" content="{lead_for_meta}">
 <meta property="og:type" content="article">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="{canonical_url}">
+<meta property="og:site_name" content="{SCHOOL_NAME} 中野校">
+<meta property="og:image" content="https://k-zemi.net/images/ogp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="678">
+<meta property="article:published_time" content="{iso_date}">
+<meta property="article:section" content="{category_esc}">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title_esc}">
+<meta name="twitter:description" content="{lead_for_meta}">
+<meta name="twitter:image" content="https://k-zemi.net/images/ogp.jpg">
+
+<!-- 構造化データ: Article (記事ページ用) -->
+<script type="application/ld+json">{article_jsonld}</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;700;900&display=swap" rel="stylesheet">
@@ -644,8 +698,28 @@ def render_index_page(posts):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ブログ｜{SCHOOL_NAME} 中野校</title>
 <meta name="description" content="個別指導塾Kゼミ中野校のブログ。お知らせ・学習コラム・受験対策情報をお届けします。">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://k-zemi.net/blog/">
+<link rel="icon" type="image/png" href="/images/favicon.png">
+<link rel="apple-touch-icon" href="/images/favicon.png">
+
+<!-- Open Graph -->
 <meta property="og:title" content="ブログ｜{SCHOOL_NAME} 中野校">
+<meta property="og:description" content="個別指導塾Kゼミ中野校のブログ。お知らせ・学習コラム・受験対策情報をお届けします。">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="https://k-zemi.net/blog/">
+<meta property="og:site_name" content="{SCHOOL_NAME} 中野校">
+<meta property="og:image" content="https://k-zemi.net/images/ogp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="678">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ブログ｜{SCHOOL_NAME} 中野校">
+<meta name="twitter:description" content="個別指導塾Kゼミ中野校のブログ。お知らせ・学習コラム・受験対策情報をお届けします。">
+<meta name="twitter:image" content="https://k-zemi.net/images/ogp.jpg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;700;900&display=swap" rel="stylesheet">
@@ -741,7 +815,61 @@ def main():
     # 本体 index.html の「最新のお知らせ・ブログ」セクションを最新3件で更新
     update_main_index_latest_posts(posts)
 
+    # sitemap.xml を生成（GSC送信用）
+    generate_sitemap(posts)
+
     print("\n完了。次はデプロイ用に dist/blog/ を deploy-edushift-samples/ にコピーしてください。")
+
+
+def generate_sitemap(posts):
+    """k-zemi.net の sitemap.xml を生成。
+    トップ(/)、ブログ一覧(/blog/)、各記事(/blog/{slug}/) を含める。
+    dist/sitemap.xml に出力。workflow が gh-pages staging へコピーする。"""
+    SITE_BASE = "https://k-zemi.net"
+    today = datetime.date.today().isoformat()
+
+    urls = [
+        # トップページ（最優先）
+        {"loc": f"{SITE_BASE}/", "lastmod": today, "changefreq": "weekly", "priority": "1.0"},
+        # ブログ一覧
+        {"loc": f"{SITE_BASE}/blog/", "lastmod": today, "changefreq": "weekly", "priority": "0.8"},
+    ]
+
+    # 各ブログ記事
+    for p in posts:
+        slug = _safe_slug(p["fm"].get("slug", ""))
+        if not slug:
+            continue
+        # 日付を ISO に変換できれば lastmod に使う
+        date_raw = p["fm"].get("date", "")
+        try:
+            d = date_raw.replace("年", "-").replace("月", "-").replace("日", "")
+            lastmod = datetime.datetime.strptime(d, "%Y-%m-%d").date().isoformat()
+        except Exception:
+            lastmod = today
+        urls.append({
+            "loc": f"{SITE_BASE}/blog/{slug}/",
+            "lastmod": lastmod,
+            "changefreq": "monthly",
+            "priority": "0.7",
+        })
+
+    xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+                 '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in urls:
+        xml_lines.append("  <url>")
+        xml_lines.append(f"    <loc>{u['loc']}</loc>")
+        xml_lines.append(f"    <lastmod>{u['lastmod']}</lastmod>")
+        xml_lines.append(f"    <changefreq>{u['changefreq']}</changefreq>")
+        xml_lines.append(f"    <priority>{u['priority']}</priority>")
+        xml_lines.append("  </url>")
+    xml_lines.append("</urlset>")
+
+    out_path = os.path.join(DIST_DIR, "sitemap.xml")
+    os.makedirs(DIST_DIR, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(xml_lines) + "\n")
+    print(f"  ✓ sitemap.xml ({len(urls)} URL)")
 
 
 def update_main_index_latest_posts(posts):
