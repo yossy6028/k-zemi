@@ -505,7 +505,7 @@ def render_post_page(post, related_posts):
         "publisher": {
             "@type": "Organization",
             "name": SCHOOL_NAME,
-            "logo": {"@type": "ImageObject", "url": "https://k-zemi.net/images/favicon.png"}
+            "logo": {"@type": "ImageObject", "url": "https://k-zemi.net/images/favicon-192x192.png"}
         },
         "mainEntityOfPage": {"@type": "WebPage", "@id": canonical_url},
         "url": canonical_url,
@@ -521,8 +521,11 @@ def render_post_page(post, related_posts):
 <meta name="description" content="{lead_for_meta}">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="{canonical_url}">
-<link rel="icon" type="image/png" href="/images/favicon.png">
-<link rel="apple-touch-icon" href="/images/favicon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://k-zemi.net/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="https://k-zemi.net/images/favicon.png">
+<link rel="icon" type="image/png" sizes="96x96" href="https://k-zemi.net/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://k-zemi.net/images/favicon-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://k-zemi.net/images/favicon-180x180.png">
 
 <!-- Open Graph -->
 <meta property="og:title" content="{title_esc}">
@@ -700,8 +703,11 @@ def render_index_page(posts):
 <meta name="description" content="個別指導塾Kゼミ中野校のブログ。お知らせ・学習コラム・受験対策情報をお届けします。">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://k-zemi.net/blog/">
-<link rel="icon" type="image/png" href="/images/favicon.png">
-<link rel="apple-touch-icon" href="/images/favicon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://k-zemi.net/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="https://k-zemi.net/images/favicon.png">
+<link rel="icon" type="image/png" sizes="96x96" href="https://k-zemi.net/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://k-zemi.net/images/favicon-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://k-zemi.net/images/favicon-180x180.png">
 
 <!-- Open Graph -->
 <meta property="og:title" content="ブログ｜{SCHOOL_NAME} 中野校">
