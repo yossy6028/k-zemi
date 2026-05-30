@@ -30,6 +30,7 @@ on:
       - 'blog-cms.html'
       - 'thanks.html'
       - 'robots.txt'
+      - 'favicon.ico'
       - '.github/workflows/build-blog.yml'
   workflow_dispatch:
 
@@ -95,6 +96,12 @@ jobs:
           if [ -f robots.txt ]; then
             cp robots.txt "$STAGING/robots.txt"
             echo "✓ robots.txt をコピー"
+          fi
+
+          # サイトアイコン: favicon.ico (ルート直置き、/favicon.ico 経路 / SERP 用)
+          if [ -f favicon.ico ]; then
+            cp favicon.ico "$STAGING/favicon.ico"
+            echo "✓ favicon.ico をコピー"
           fi
 
           # SEO 資産: sitemap.xml (build_blog.py が posts/ から動的生成)
