@@ -69,7 +69,8 @@ function doPost(e) {
     if (!ledgerRow) {
       body = '※注意: 問合せ台帳（スプレッドシート）への記録に失敗しました。台帳の存在と権限を確認してください。\n\n' + body;
     }
-    GmailApp.sendEmail(DEST_EMAIL, SUBJECT, body, mailOptions);
+    // MailApp を使う（GmailApp は Gmail 全体の読み書き削除スコープを要求するため。送信専用の script.send_mail で足りる）
+    MailApp.sendEmail(DEST_EMAIL, SUBJECT, body, mailOptions);
     if (ledgerRow) {
       try { updateLedgerStatus(ledgerRow, 'メール送信済み'); } catch (err) {}
     }
@@ -257,7 +258,7 @@ function healthCheck() {
   if (now - last < 12 * 3600 * 1000) return;
   props.setProperty('LAST_HEALTH_ALERT', String(now));
 
-  GmailApp.sendEmail(ADMIN_EMAIL, '【要確認】Kゼミ問合せフォーム ヘルスチェック異常',
+  MailApp.sendEmail(ADMIN_EMAIL, '【要確認】Kゼミ問合せフォーム ヘルスチェック異常',
     'Kゼミ問合せフォームの定期チェック（6時間毎）で異常を検知しました。\n\n' +
     problems.map(function (s) { return '・' + s; }).join('\n') +
     '\n\n確認手順: https://k-zemi.net/ のフォームからテスト送信 → 台帳とnakano@kzemi.comへの着信を確認。' +
