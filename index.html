@@ -635,11 +635,11 @@ footer p{font-size:.85rem;opacity:.6;margin-top:8px}
       <div class="form-grid">
         <div class="form-row">
           <label for="student_name">生徒氏名 <span class="required">＊</span></label>
-          <input id="student_name" name="生徒氏名" type="text" required placeholder="例：山田 花子">
+          <input id="student_name" name="生徒氏名" type="text" required maxlength="100" placeholder="例：山田 花子">
         </div>
         <div class="form-row">
           <label for="parent_name">保護者氏名 <span class="required">＊</span></label>
-          <input id="parent_name" name="保護者氏名" type="text" required placeholder="例：山田 太郎">
+          <input id="parent_name" name="保護者氏名" type="text" required maxlength="100" placeholder="例：山田 太郎">
         </div>
         <div class="form-row">
           <label for="grade">学年 <span class="required">＊</span></label>
@@ -654,23 +654,23 @@ footer p{font-size:.85rem;opacity:.6;margin-top:8px}
         </div>
         <div class="form-row">
           <label for="school">学校名 <span class="required">＊</span></label>
-          <input id="school" name="学校名" type="text" required placeholder="例：中野中学校">
+          <input id="school" name="学校名" type="text" required maxlength="100" placeholder="例：中野中学校">
         </div>
         <div class="form-row">
           <label for="phone">電話番号 <span class="required">＊</span></label>
-          <input id="phone" name="電話番号" type="tel" required placeholder="例：090-0000-0000">
+          <input id="phone" name="電話番号" type="tel" required maxlength="20" placeholder="例：090-0000-0000">
         </div>
         <div class="form-row">
           <label for="email">メールアドレス <span class="required">＊</span></label>
-          <input id="email" name="メールアドレス" type="email" required placeholder="例：sample@example.com">
+          <input id="email" name="メールアドレス" type="email" required maxlength="254" placeholder="例：sample@example.com">
         </div>
         <div class="form-row form-row-full">
           <label for="message">相談内容・ご質問</label>
-          <textarea id="message" name="相談内容・ご質問" rows="5" placeholder="お子さんの学習状況やお悩み、塾選びでご検討中のポイントなど、お気軽にご記入ください。"></textarea>
+          <textarea id="message" name="相談内容・ご質問" rows="5" maxlength="1000" placeholder="お子さんの学習状況やお悩み、塾選びでご検討中のポイントなど、お気軽にご記入ください。"></textarea>
         </div>
         <div class="form-row form-row-full">
           <label for="referrer">紹介者（ご紹介の場合）</label>
-          <input id="referrer" name="紹介者" type="text" placeholder="例：CAP 細井先生のご紹介、Kゼミ卒業生の○○ など">
+          <input id="referrer" name="紹介者" type="text" maxlength="200" placeholder="例：CAP 細井先生のご紹介、Kゼミ卒業生の○○ など">
         </div>
         <div class="form-row form-row-full" style="text-align:center;margin-top:1rem">
           <button type="submit" class="btn-primary form-submit">この内容で申し込む &#10132;</button>
