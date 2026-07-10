@@ -680,9 +680,9 @@ footer p{font-size:.85rem;opacity:.6;margin-top:8px}
           <button type="submit" class="btn-primary form-submit">この内容で申し込む &#10132;</button>
           <p style="margin-top:1rem;font-size:.85rem;color:var(--text-light)">送信後、3営業日以内に担当よりご連絡いたします。</p>
         </div>
-        <div class="form-row form-row-full" id="form-fallback" style="display:none;background:#FFF8E1;border:1px solid #C9A227;border-radius:12px;padding:20px 24px;text-align:center">
-          <p style="font-weight:700;color:#7A5C00;margin-bottom:.6rem">送信システムが一時的に混み合っており、送信できませんでした。</p>
-          <p style="font-size:.9rem;color:#5D4A00;margin-bottom:1rem">お手数ですが、下記のいずれかの方法でご連絡ください。ご入力いただいた内容はメールに引き継がれます。</p>
+        <div class="form-row form-row-full" id="form-fallback" role="alert" style="display:none;background:#FFF8E1;border:1px solid #C9A227;border-radius:12px;padding:20px 24px;text-align:center">
+          <p style="font-weight:700;color:#7A5C00;margin-bottom:.6rem">送信結果を確認できませんでした。</p>
+          <p style="font-size:.9rem;color:#5D4A00;margin-bottom:1rem">お手数ですが、下記のいずれかの方法でご連絡ください。ご入力いただいた内容はメールに引き継がれます。<br>（すでに送信されていた場合、重複してのご連絡となりますがご容赦ください）</p>
           <a id="fallback-mailto" href="mailto:nakano@kzemi.com" class="btn-primary" style="font-size:.95rem;padding:.8rem 1.8rem">メールでこの内容を送る &#10132;</a>
           <p style="margin-top:.9rem;font-size:.95rem;color:#5D4A00">お電話でも受け付けています：<a href="tel:03-3382-5707" style="font-weight:700;color:#1B5E20">03-3382-5707</a></p>
         </div>
@@ -693,7 +693,7 @@ footer p{font-size:.85rem;opacity:.6;margin-top:8px}
 <script>
 (function(){
   var form = document.querySelector('.contact-form');
-  if(!form || !window.fetch) return;
+  if(!form || !window.fetch || !window.AbortController) return;
   var btn = form.querySelector('.form-submit');
   var fallback = document.getElementById('form-fallback');
   form.addEventListener('submit', function(ev){
@@ -711,10 +711,12 @@ footer p{font-size:.85rem;opacity:.6;margin-top:8px}
       body: fd,
       signal: controller.signal
     }).then(function(res){
-      clearTimeout(timer);
       if(!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
-    }).then(function(){
+    }).then(function(data){
+      clearTimeout(timer);
+      // FormSubmit は失敗時も HTTP 200 + success:"false" を返すことがある
+      if(String(data.success) !== 'true') throw new Error('formsubmit rejected');
       window.location.href = 'https://k-zemi.net/thanks.html';
     }).catch(function(){
       clearTimeout(timer);
@@ -730,6 +732,7 @@ footer p{font-size:.85rem;opacity:.6;margin-top:8px}
         + '&body=' + encodeURIComponent(lines.join('\n') + '\n\n（ホームページのフォームから送信できなかったため、メールでご連絡しています）');
       fallback.style.display = 'block';
       fallback.scrollIntoView({behavior:'smooth', block:'center'});
+      mail.focus({preventScroll:true});
     });
   });
 })();
