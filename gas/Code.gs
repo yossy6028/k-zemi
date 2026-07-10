@@ -28,12 +28,6 @@ function doPost(e) {
     return jsonOut({ success: 'false', message: 'required fields missing', missing: missing });
   }
 
-  // レート制限: 10分あたり15件まで（スパムによるGmailクォータ枯渇・受信箱洪水の防止）。
-  // 超過時は success:false を返し、正規ユーザーはフォールバック（メール/電話導線）で連絡できる
-  if (!checkRateLimit()) {
-    return jsonOut({ success: 'false', message: 'rate limited' });
-  }
-
   // 各フィールドを1000文字に制限（巨大ボディによるメール肥大の防止）
   FIELD_ORDER.forEach(function (label) {
     if (p[label] && p[label].length > 1000) p[label] = p[label].slice(0, 1000) + '…（文字数上限で切り詰め）';
@@ -47,20 +41,30 @@ function doPost(e) {
     }
   } catch (err) {}
 
-  // 台帳の行位置ずれ防止（同時送信対策）。ロック不能でも送信は続行する
+  // ここから先（レート判定→台帳追記→メール送信→状態更新）はロック1本で完全直列化する。
+  // ロックが取れない場合は処理せず success:false を返し、正規ユーザーは
+  // フォールバック（メール/電話導線）で連絡できるため、安全側（フェイルクローズ）に倒せる
   var lock = LockService.getScriptLock();
-  var locked = false;
-  try { locked = lock.tryLock(10000); } catch (err) {}
-
-  // メール送信より先に台帳へ記録する（送信失敗しても問合せ自体は必ず残る）
-  var ledgerRow = 0;
   try {
-    ledgerRow = appendToLedger(p, 'メール送信前');
+    lock.waitLock(8000);
   } catch (err) {
-    // 台帳失敗はメール送信を止めないが、静かに握りつぶさずメール本文で知らせる
+    return jsonOut({ success: 'false', message: 'busy' });
   }
 
   try {
+    // レート制限: 10分15件 + 日次50件（スパムによるGmailクォータ枯渇・受信箱洪水の防止）
+    if (!checkRateLimit()) {
+      return jsonOut({ success: 'false', message: 'rate limited' });
+    }
+
+    // メール送信より先に台帳へ記録する（送信失敗しても問合せ自体は必ず残る）
+    var ledgerRow = 0;
+    try {
+      ledgerRow = appendToLedger(p, 'メール送信前');
+    } catch (err) {
+      // 台帳失敗はメール送信を止めないが、静かに握りつぶさずメール本文で知らせる
+    }
+
     var body = buildMailBody(p);
     if (!ledgerRow) {
       body = '※注意: 問合せ台帳（スプレッドシート）への記録に失敗しました。台帳の存在と権限を確認してください。\n\n' + body;
@@ -70,7 +74,7 @@ function doPost(e) {
       try { updateLedgerStatus(ledgerRow, 'メール送信済み'); } catch (err) {}
     }
   } finally {
-    if (locked) lock.releaseLock();
+    lock.releaseLock();
   }
 
   // fetch(AJAX) からは JSON、JS無効環境の直接POSTには thanks.html へ誘導する HTML を返す
@@ -158,26 +162,25 @@ function sanitizeCell(v) {
 }
 
 // グローバルレート制限: 10分15件 + 1日50件（Gmailコンシューマ100通/日クォータの枯渇防止）。
-// カウンタ更新はLockServiceで直列化し、並行リクエストによる上限すり抜けを防ぐ
+// 必ず doPost のスクリプトロック内から呼ぶこと（呼び出し側で直列化済み）。
+// 10分窓はCacheService、日次はCacheのTTL上限(6時間)では日を跨げないためPropertiesServiceで永続化。
+// 例外はdoPost側に伝播させ、クライアントのフォールバック導線に落とす（フェイルクローズ）
 function checkRateLimit() {
-  var lock = LockService.getScriptLock();
-  var locked = false;
-  try { locked = lock.tryLock(3000); } catch (err) {}
-  try {
-    var cache = CacheService.getScriptCache();
-    var now = new Date().getTime();
-    var winKey = 'rate10m_' + Math.floor(now / 600000);
-    var dayKey = 'rateday_' + Math.floor(now / 86400000);
-    var w = Number(cache.get(winKey) || 0) + 1;
-    var d = Number(cache.get(dayKey) || 0) + 1;
-    cache.put(winKey, String(w), 700);
-    cache.put(dayKey, String(d), 21600); // Cache上限6時間: 日次カウンタは6時間毎リセットの近似(実効50件/6h)
-    return w <= 15 && d <= 50;
-  } catch (err) {
-    return true; // レート制限系の障害で正規の問合せを止めない（フェイルオープン）
-  } finally {
-    if (locked) lock.releaseLock();
-  }
+  var cache = CacheService.getScriptCache();
+  var winKey = 'rate10m_' + Math.floor(new Date().getTime() / 600000);
+  var w = Number(cache.get(winKey) || 0) + 1;
+  cache.put(winKey, String(w), 700);
+  if (w > 15) return false;
+
+  var props = PropertiesService.getScriptProperties();
+  var today = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMdd');
+  var raw = props.getProperty('DAILY_COUNT');
+  var d = null;
+  try { d = raw ? JSON.parse(raw) : null; } catch (err) {}
+  if (!d || d.date !== today) d = { date: today, count: 0 };
+  d.count += 1;
+  props.setProperty('DAILY_COUNT', JSON.stringify(d));
+  return d.count <= 50;
 }
 
 function updateLedgerStatus(rowIndex, status) {
