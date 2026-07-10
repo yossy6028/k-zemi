@@ -194,3 +194,83 @@ function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// 外形監視用の生存応答（公開情報はokフラグのみ。UptimeRobot等の外部監視にも転用可）
+function doGet() {
+  return jsonOut({ ok: 'true' });
+}
+
+/**
+ * 定期ヘルスチェック（時間主導トリガーで6時間毎に実行）。
+ * 異常時のみ管理者へメール通知する。通知は12時間に1回まで（アラート洪水防止）。
+ */
+var ADMIN_EMAIL = 'katsu.yoshii@gmail.com';
+var PUBLIC_PAGE = 'https://k-zemi.net/';
+var DEPLOY_ID_FRAGMENT = 'AKfycbybbskYZE8zn-RWmgmye1NlVBSFqdp1P9Gsl6mxZypN3OWutHA7kRHxmnUDiDnOEBX2FQ';
+
+function healthCheck() {
+  var problems = [];
+
+  // 1. 本番ページの生存と、フォーム送信先がGASのまま残っているか（先祖返り・巻き戻り検知）
+  try {
+    var res = UrlFetchApp.fetch(PUBLIC_PAGE, { muteHttpExceptions: true, followRedirects: true });
+    var code = res.getResponseCode();
+    if (code !== 200) {
+      problems.push('本番ページ ' + PUBLIC_PAGE + ' が HTTP ' + code);
+    } else if (res.getContentText().indexOf(DEPLOY_ID_FRAGMENT) === -1) {
+      problems.push('フォームの送信先(GAS URL)が本番ページから消えている（デプロイ巻き戻りの可能性）');
+    }
+  } catch (err) {
+    problems.push('本番ページの取得に失敗: ' + err);
+  }
+
+  // 2. Web Appエンドポイントの外形応答（匿名GETで doGet の ok:true が返るか）
+  try {
+    var ep = UrlFetchApp.fetch('https://script.google.com/macros/s/' + DEPLOY_ID_FRAGMENT + '/exec',
+      { muteHttpExceptions: true, followRedirects: true });
+    if (ep.getResponseCode() !== 200 || ep.getContentText().indexOf('"ok":"true"') === -1) {
+      problems.push('フォーム受信エンドポイントが正常応答しない (HTTP ' + ep.getResponseCode() + ')');
+    }
+  } catch (err) {
+    problems.push('エンドポイント外形チェックに失敗: ' + err);
+  }
+
+  // 3. 台帳スプレッドシートにアクセスできるか（削除・権限剥奪の検知）
+  try {
+    getLedgerSheet().getLastRow();
+  } catch (err) {
+    problems.push('問合せ台帳にアクセスできない（削除/権限変更の可能性）: ' + err);
+  }
+
+  // 4. Gmail残クォータ（枯渇間近=スパム攻撃や大量送信の兆候）
+  try {
+    var quota = MailApp.getRemainingDailyQuota();
+    if (quota < 20) problems.push('Gmail送信の残りクォータが ' + quota + ' 通（スパム攻撃の可能性。台帳と受信箱を確認）');
+  } catch (err) {}
+
+  if (!problems.length) return;
+
+  // アラートは12時間に1回まで
+  var props = PropertiesService.getScriptProperties();
+  var last = Number(props.getProperty('LAST_HEALTH_ALERT') || 0);
+  var now = new Date().getTime();
+  if (now - last < 12 * 3600 * 1000) return;
+  props.setProperty('LAST_HEALTH_ALERT', String(now));
+
+  GmailApp.sendEmail(ADMIN_EMAIL, '【要確認】Kゼミ問合せフォーム ヘルスチェック異常',
+    'Kゼミ問合せフォームの定期チェック（6時間毎）で異常を検知しました。\n\n' +
+    problems.map(function (s) { return '・' + s; }).join('\n') +
+    '\n\n確認手順: https://k-zemi.net/ のフォームからテスト送信 → 台帳とnakano@kzemi.comへの着信を確認。' +
+    '\nスクリプト: https://script.google.com/d/1I69zIFJUZDH9Z2UCI9IyGj_y17qZWuVQcEozVjV-NeZfh8_WeHvP7yFH/edit');
+}
+
+// 時間主導トリガー(6時間毎)を冪等に設置する（healthCheckトリガーが既にあれば何もしない）
+function installHealthCheckTrigger() {
+  var exists = ScriptApp.getProjectTriggers().some(function (t) {
+    return t.getHandlerFunction() === 'healthCheck';
+  });
+  if (!exists) {
+    ScriptApp.newTrigger('healthCheck').timeBased().everyHours(6).create();
+  }
+  return ScriptApp.getProjectTriggers().length;
+}
