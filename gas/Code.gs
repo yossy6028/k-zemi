@@ -209,31 +209,46 @@ var ADMIN_EMAIL = 'katsu.yoshii@gmail.com';
 var PUBLIC_PAGE = 'https://k-zemi.net/';
 var DEPLOY_ID_FRAGMENT = 'AKfycbybbskYZE8zn-RWmgmye1NlVBSFqdp1P9Gsl6mxZypN3OWutHA7kRHxmnUDiDnOEBX2FQ';
 
+function fetchWithRetry_(url, tries, waitMs) {
+  // 一過性ブリップ（GAS/Fastly側の瞬断）を障害と誤判定しないため、間隔を空けて再試行する。
+  // 全試行が失敗したときだけ異常とみなす。observed には各試行の結果を残す（事後診断用）。
+  var observed = [];
+  var last = null;
+  for (var i = 0; i < tries; i++) {
+    if (i > 0) Utilities.sleep(waitMs);
+    try {
+      var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true });
+      observed.push(String(res.getResponseCode()));
+      last = { ok: true, res: res, code: res.getResponseCode() };
+      if (res.getResponseCode() === 200) return { ok: true, res: res, code: 200, observed: observed };
+    } catch (err) {
+      observed.push('ERR:' + err);
+      last = { ok: false, err: err, code: 0 };
+    }
+  }
+  last.observed = observed;
+  return last;
+}
+
 function healthCheck() {
   var problems = [];
 
   // 1. 本番ページの生存と、フォーム送信先がGASのまま残っているか（先祖返り・巻き戻り検知）
-  try {
-    var res = UrlFetchApp.fetch(PUBLIC_PAGE, { muteHttpExceptions: true, followRedirects: true });
-    var code = res.getResponseCode();
-    if (code !== 200) {
-      problems.push('本番ページ ' + PUBLIC_PAGE + ' が HTTP ' + code);
-    } else if (res.getContentText().indexOf(DEPLOY_ID_FRAGMENT) === -1) {
-      problems.push('フォームの送信先(GAS URL)が本番ページから消えている（デプロイ巻き戻りの可能性）');
-    }
-  } catch (err) {
-    problems.push('本番ページの取得に失敗: ' + err);
+  var r1 = fetchWithRetry_(PUBLIC_PAGE, 3, 15000);
+  if (!r1.ok) {
+    problems.push('本番ページの取得に失敗: ' + r1.err + '（3回試行: ' + r1.observed.join(', ') + '）');
+  } else if (r1.code !== 200) {
+    problems.push('本番ページ ' + PUBLIC_PAGE + ' が HTTP ' + r1.code + '（3回試行: ' + r1.observed.join(', ') + '）');
+  } else if (r1.res.getContentText().indexOf(DEPLOY_ID_FRAGMENT) === -1) {
+    problems.push('フォームの送信先(GAS URL)が本番ページから消えている（デプロイ巻き戻りの可能性）');
   }
 
   // 2. Web Appエンドポイントの外形応答（匿名GETで doGet の ok:true が返るか）
-  try {
-    var ep = UrlFetchApp.fetch('https://script.google.com/macros/s/' + DEPLOY_ID_FRAGMENT + '/exec',
-      { muteHttpExceptions: true, followRedirects: true });
-    if (ep.getResponseCode() !== 200 || ep.getContentText().indexOf('"ok":"true"') === -1) {
-      problems.push('フォーム受信エンドポイントが正常応答しない (HTTP ' + ep.getResponseCode() + ')');
-    }
-  } catch (err) {
-    problems.push('エンドポイント外形チェックに失敗: ' + err);
+  var r2 = fetchWithRetry_('https://script.google.com/macros/s/' + DEPLOY_ID_FRAGMENT + '/exec', 3, 15000);
+  if (!r2.ok) {
+    problems.push('エンドポイント外形チェックに失敗: ' + r2.err + '（3回試行: ' + r2.observed.join(', ') + '）');
+  } else if (r2.code !== 200 || r2.res.getContentText().indexOf('"ok":"true"') === -1) {
+    problems.push('フォーム受信エンドポイントが正常応答しない (HTTP ' + r2.code + '・3回試行: ' + r2.observed.join(', ') + '）');
   }
 
   // 3. 台帳スプレッドシートにアクセスできるか（削除・権限剥奪の検知）
@@ -256,13 +271,15 @@ function healthCheck() {
   var last = Number(props.getProperty('LAST_HEALTH_ALERT') || 0);
   var now = new Date().getTime();
   if (now - last < 12 * 3600 * 1000) return;
-  props.setProperty('LAST_HEALTH_ALERT', String(now));
 
   MailApp.sendEmail(ADMIN_EMAIL, '【要確認】Kゼミ問合せフォーム ヘルスチェック異常',
     'Kゼミ問合せフォームの定期チェック（6時間毎）で異常を検知しました。\n\n' +
     problems.map(function (s) { return '・' + s; }).join('\n') +
     '\n\n確認手順: https://k-zemi.net/ のフォームからテスト送信 → 台帳とnakano@kzemi.comへの着信を確認。' +
     '\nスクリプト: https://script.google.com/d/1I69zIFJUZDH9Z2UCI9IyGj_y17qZWuVQcEozVjV-NeZfh8_WeHvP7yFH/edit');
+
+  // 送信が成功した後にだけラッチを立てる（先に立てると送信失敗時に12時間無音になる）
+  props.setProperty('LAST_HEALTH_ALERT', String(now));
 }
 
 // 時間主導トリガー(6時間毎)を冪等に設置する（healthCheckトリガーが既にあれば何もしない）
