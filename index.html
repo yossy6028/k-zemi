@@ -55,37 +55,326 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  "name": "個別指導塾 Kゼミ 中野校",
-  "alternateName": "Kゼミ",
-  "url": "https://k-zemi.net/",
-  "logo": "https://k-zemi.net/images/favicon-192x192.png",
-  "image": "https://k-zemi.net/images/ogp.jpg",
-  "description": "中野駅南口徒歩5分、開校30年の個別指導塾Kゼミ中野校。小学生から既卒生まで、内申点対策・高校受験・大学受験・補習・不登校サポートに対応。",
-  "telephone": "+81-3-3382-5707",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "中野2-12-12 中野オクト勧業ビル2F",
-    "addressLocality": "中野区",
-    "addressRegion": "東京都",
-    "postalCode": "164-0001",
-    "addressCountry": "JP"
-  },
-  "areaServed": {
-    "@type": "Place",
-    "name": "東京都中野区"
-  },
-  "openingHoursSpecification": [
+  "@graph": [
     {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      "opens": "13:00",
-      "closes": "20:00"
+      "@type": [
+        "EducationalOrganization",
+        "LocalBusiness"
+      ],
+      "@id": "https://k-zemi.net/#organization",
+      "name": "個別指導塾 Kゼミ 中野校",
+      "alternateName": [
+        "Kゼミ",
+        "Kゼミ中野校"
+      ],
+      "url": "https://k-zemi.net/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://k-zemi.net/images/favicon-192x192.png",
+        "width": 192,
+        "height": 192
+      },
+      "image": "https://k-zemi.net/images/ogp.jpg",
+      "description": "中野駅南口徒歩5分、開校30年の個別指導塾Kゼミ中野校。小学生から既卒生まで、内申点対策・高校受験・大学受験・補習・不登校サポート・英検対策に対応。1対1および1対2の個別指導で、講師の平均年齢は40歳。",
+      "slogan": "中野で30年、自ら解決する力を身に着ける個別指導塾",
+      "telephone": "+81-3-3382-5707",
+      "priceRange": "3,000円〜5,200円（1コマ60分）",
+      "currenciesAccepted": "JPY",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "中野2-12-12 中野オクト勧業ビル2F",
+        "addressLocality": "中野区",
+        "addressRegion": "東京都",
+        "postalCode": "164-0001",
+        "addressCountry": "JP"
+      },
+      "hasMap": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E9%87%8E%E5%8C%BA%E4%B8%AD%E9%87%8E2-12-12+%E4%B8%AD%E9%87%8E%E3%82%AA%E3%82%AF%E3%83%88%E5%8B%A7%E6%A5%AD%E3%83%93%E3%83%AB2F",
+      "areaServed": [
+        {
+          "@type": "Place",
+          "name": "東京都中野区"
+        },
+        {
+          "@type": "Place",
+          "name": "中野駅周辺"
+        }
+      ],
+      "publicTransportationAccess": "JR中央線・総武線／東京メトロ東西線 中野駅 南口 徒歩5分",
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "opens": "16:00",
+          "closes": "20:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Saturday"
+          ],
+          "opens": "13:00",
+          "closes": "20:00"
+        }
+      ],
+      "audience": [
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "小学生"
+        },
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "中学生"
+        },
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "高校生"
+        },
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "既卒生"
+        }
+      ],
+      "knowsAbout": [
+        "個別指導",
+        "1対1個別指導",
+        "1対2個別指導",
+        "内申点対策",
+        "高校受験",
+        "大学受験",
+        "中学受験",
+        "英検対策",
+        "学習習慣の定着",
+        "補習",
+        "不登校サポート"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "授業料（1コマ60分）",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（通常）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "4900",
+            "eligibleCustomerType": "小学生・中学生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "4900",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（通常）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "5200",
+            "eligibleCustomerType": "高校生・既卒生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "5200",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（割引）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "4500",
+            "eligibleCustomerType": "小学生・中学生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "4500",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（割引）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "4800",
+            "eligibleCustomerType": "高校生・既卒生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "4800",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（通常）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "3400",
+            "eligibleCustomerType": "小学生・中学生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3400",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（通常）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "3900",
+            "eligibleCustomerType": "高校生・既卒生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3900",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（割引）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "3000",
+            "eligibleCustomerType": "小学生・中学生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3000",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（割引）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "3500",
+            "eligibleCustomerType": "高校生・既卒生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3500",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          }
+        ]
+      },
+      "makesOffer": {
+        "@type": "Offer",
+        "name": "無料体験授業",
+        "price": "0",
+        "priceCurrency": "JPY",
+        "url": "https://k-zemi.net/",
+        "description": "入塾前に実際の個別指導を体験できる無料体験授業。HPの申込フォームまたは電話で申し込めます。"
+      },
+      "sameAs": [
+        "https://cap-juken.com/"
+      ],
+      "subOrganization": {
+        "@type": "EducationalOrganization",
+        "name": "中学受験専門 個別指導塾 CAP",
+        "url": "https://cap-juken.com/",
+        "description": "Kゼミの姉妹校。中学受験専門の個別指導塾で、CAPの元室長が指導にあたる。"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://k-zemi.net/#website",
+      "url": "https://k-zemi.net/",
+      "name": "個別指導塾 Kゼミ 中野校",
+      "inLanguage": "ja-JP",
+      "publisher": {
+        "@id": "https://k-zemi.net/#organization"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://k-zemi.net/#webpage",
+      "url": "https://k-zemi.net/",
+      "name": "個別指導塾 Kゼミ 中野校｜中野で30年、自ら解決する力を身に着ける個別指導塾",
+      "isPartOf": {
+        "@id": "https://k-zemi.net/#website"
+      },
+      "about": {
+        "@id": "https://k-zemi.net/#organization"
+      },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://k-zemi.net/images/ogp.jpg"
+      },
+      "inLanguage": "ja-JP",
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [
+          "h1",
+          "h2"
+        ]
+      }
     }
-  ],
-  "knowsAbout": ["個別指導", "高校受験", "大学受験", "中学受験", "内申点対策", "不登校サポート"],
-  "sameAs": [
-    "https://cap-juken.com/"
   ]
 }
 </script>

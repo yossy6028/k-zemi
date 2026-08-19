@@ -30,6 +30,7 @@ on:
       - 'blog-cms.html'
       - 'thanks.html'
       - 'robots.txt'
+      - 'llms.txt'
       - 'favicon.ico'
       - '.github/workflows/build-blog.yml'
   workflow_dispatch:
@@ -96,6 +97,12 @@ jobs:
           if [ -f robots.txt ]; then
             cp robots.txt "$STAGING/robots.txt"
             echo "✓ robots.txt をコピー"
+          fi
+
+          # AIEO 資産: llms.txt (生成AI向けのサイト要約。静的)
+          if [ -f llms.txt ]; then
+            cp llms.txt "$STAGING/llms.txt"
+            echo "✓ llms.txt をコピー"
           fi
 
           # サイトアイコン: favicon.ico (ルート直置き、/favicon.ico 経路 / SERP 用)
