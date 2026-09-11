@@ -230,6 +230,61 @@ function fetchWithRetry_(url, tries, waitMs) {
   return last;
 }
 
+/**
+ * Web Appエンドポイントの2段プローブ。
+ * GASの /exec は「①/exec が doGet を実行し、結果を script.googleusercontent.com へ 302 転送 →
+ * ②転送先(echoホスト)が本文を返す」という2段構造。①の302が得られた時点で
+ * 「デプロイが存在し doGet が実行された」＝フォーム受信は生きている、が確定する。
+ * ②は Google 側の都合で数分規模の 404/503 を返すことがあり（2026-07-19 503 / 08-19 404 / 09-11 404 は
+ * いずれも実害なし）、フォーム受信とは無関係。単発リトライでは吸収できない長さのため、
+ * 段ごとに結果を分けて返し、呼び出し側で通知方針を変える。
+ */
+function probeExec_(tries, waitMs) {
+  var url = 'https://script.google.com/macros/s/' + DEPLOY_ID_FRAGMENT + '/exec';
+  var observed = [];
+  var hop1Ok = false;
+  var detail = '';
+  for (var i = 0; i < tries; i++) {
+    if (i > 0) Utilities.sleep(waitMs);
+    try {
+      var r1 = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: false });
+      var c1 = r1.getResponseCode();
+      if (c1 === 200 && r1.getContentText().indexOf('"ok":"true"') !== -1) {
+        observed.push('200');
+        return { hop1Ok: true, e2eOk: true, observed: observed, detail: '' };
+      }
+      var loc = headerOf_(r1, 'Location');
+      if ((c1 === 302 || c1 === 301 || c1 === 303) && loc.indexOf('script.googleusercontent.com') !== -1) {
+        hop1Ok = true;
+        var r2 = UrlFetchApp.fetch(loc, { muteHttpExceptions: true, followRedirects: true });
+        var c2 = r2.getResponseCode();
+        observed.push(c1 + '>' + c2);
+        if (c2 === 200 && r2.getContentText().indexOf('"ok":"true"') !== -1) {
+          return { hop1Ok: true, e2eOk: true, observed: observed, detail: '' };
+        }
+        detail = 'echo応答: ' + snippet_(r2.getContentText());
+      } else {
+        observed.push(String(c1) + (loc ? '>' + loc.replace(/\?.*$/, '') : ''));
+        detail = '/exec応答: ' + snippet_(r1.getContentText());
+      }
+    } catch (err) {
+      observed.push('ERR:' + err);
+      detail = String(err);
+    }
+  }
+  return { hop1Ok: hop1Ok, e2eOk: false, observed: observed, detail: detail };
+}
+
+function headerOf_(res, name) {
+  var h = res.getAllHeaders();
+  var v = h[name] || h[name.toLowerCase()] || '';
+  return Array.isArray(v) ? String(v[0] || '') : String(v);
+}
+
+function snippet_(text) {
+  return String(text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
+}
+
 function healthCheck() {
   var problems = [];
 
@@ -243,12 +298,25 @@ function healthCheck() {
     problems.push('フォームの送信先(GAS URL)が本番ページから消えている（デプロイ巻き戻りの可能性）');
   }
 
-  // 2. Web Appエンドポイントの外形応答（匿名GETで doGet の ok:true が返るか）
-  var r2 = fetchWithRetry_('https://script.google.com/macros/s/' + DEPLOY_ID_FRAGMENT + '/exec', 3, 15000);
-  if (!r2.ok) {
-    problems.push('エンドポイント外形チェックに失敗: ' + r2.err + '（3回試行: ' + r2.observed.join(', ') + '）');
-  } else if (r2.code !== 200 || r2.res.getContentText().indexOf('"ok":"true"') === -1) {
-    problems.push('フォーム受信エンドポイントが正常応答しない (HTTP ' + r2.code + '・3回試行: ' + r2.observed.join(', ') + '）');
+  // 2. Web Appエンドポイント（2段プローブ）。①/exec の302すら得られない＝デプロイ消失・停止なので即通知。
+  //    ①は通るが②(echoホスト)だけ失敗＝Google側の一過性事象。フォーム受信は生きているので
+  //    2回連続（=12時間継続）した場合にのみ通知する。連続回数は Script Properties に保持。
+  var props = PropertiesService.getScriptProperties();
+  var r2 = probeExec_(3, 20000);
+  if (!r2.hop1Ok) {
+    problems.push('フォーム受信エンドポイント(/exec)が応答しない（3回試行: ' + r2.observed.join(', ') + '）' +
+      (r2.detail ? ' ' + r2.detail : ''));
+    props.deleteProperty('EXEC_E2E_FAIL_STREAK');
+  } else if (!r2.e2eOk) {
+    var streak = Number(props.getProperty('EXEC_E2E_FAIL_STREAK') || 0) + 1;
+    props.setProperty('EXEC_E2E_FAIL_STREAK', String(streak));
+    if (streak >= 2) {
+      problems.push('エンドポイントは生存（/execは302転送を返す）だが、応答本文の取得が ' + streak +
+        ' 回連続で失敗（今回の3回試行: ' + r2.observed.join(', ') + '）' + (r2.detail ? ' ' + r2.detail : '') +
+        ' ※フォーム受信自体は生きている可能性が高い。台帳に新着がないか確認');
+    }
+  } else {
+    props.deleteProperty('EXEC_E2E_FAIL_STREAK');
   }
 
   // 3. 台帳スプレッドシートにアクセスできるか（削除・権限剥奪の検知）
@@ -267,7 +335,6 @@ function healthCheck() {
   if (!problems.length) return;
 
   // アラートは12時間に1回まで
-  var props = PropertiesService.getScriptProperties();
   var last = Number(props.getProperty('LAST_HEALTH_ALERT') || 0);
   var now = new Date().getTime();
   if (now - last < 12 * 3600 * 1000) return;
