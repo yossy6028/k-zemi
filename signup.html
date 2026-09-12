@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app">
+  <title>Kゼミ ブログ管理画面 パスワード設定</title>
+  <link rel="icon" href="/images/favicon.png">
+  <style>
+    /* 🚨 Netlify Identity widget の overlay がクリックを intercept する不具合への対策。
+       widget の login API は内部で使うが UI は表示しないため強制非表示+クリック透過 */
+    .netlify-identity-widget,
+    #netlify-identity-widget,
+    iframe[src="about:blank"] {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      z-index: -1 !important;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #E8F5E9 0%, #ffffff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.7;
+      color: #2D3748;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+      max-width: 560px;
+      width: 100%;
+      padding: 40px 32px;
+    }
+    h1 {
+      font-size: 1.6rem;
+      color: #0D3311;
+      font-weight: 900;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .subtitle {
+      color: #718096;
+      font-size: 0.95rem;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .email-row {
+      background: #F7FAFC;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: #4A5568;
+      word-break: break-all;
+    }
+    .email-row strong { color: #0D3311; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.92rem; }
+    input[type="password"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #E2E8F0;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input[type="password"]:focus { border-color: #1B5E20; }
+    .hint { font-size: 0.82rem; color: #718096; margin-top: -10px; margin-bottom: 16px; }
+    .btn-primary {
+      width: 100%;
+      background: #1B5E20;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-primary:hover { background: #0D3311; }
+    .btn-primary:disabled { background: #A0AEC0; cursor: not-allowed; }
+    .alert {
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+    .alert-error { background: #FED7D7; color: #9B2C2C; border: 1px solid #FC8181; }
+    .alert-success { background: #C6F6D5; color: #22543D; border: 1px solid #68D391; }
+    .no-token {
+      text-align: center;
+      color: #718096;
+    }
+    .no-token a {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 12px 24px;
+      background: #1B5E20;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>パスワード設定</h1>
+    <p class="subtitle">Kゼミ ブログ管理画面の初回ログイン</p>
+
+    <div id="noTokenView" class="no-token" style="display:none">
+      <p>招待トークンが見つかりません。</p>
+      <p>招待メールのリンクから直接アクセスしてください。</p>
+      <a href="/post.html">管理画面（ログイン済みの方）</a>
+    </div>
+
+    <div id="formView" style="display:none">
+      <div class="email-row">
+        登録メールアドレス: <strong id="emailDisplay">読み込み中...</strong>
+      </div>
+      <div id="alertBox"></div>
+      <form id="signupForm">
+        <label for="pw">新しいパスワード（8文字以上）</label>
+        <input type="password" id="pw" minlength="8" required autocomplete="new-password" placeholder="例: kzemi2026spring">
+        <p class="hint">英字・数字・記号を組み合わせると安全です。設定したパスワードは必ず覚えてください。</p>
+        <button type="submit" class="btn-primary" id="submitBtn">パスワードを設定して管理画面に進む</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- 🚨 widget script は使わない (overlay がクリックを intercept する不具合のため)
+       全API を直接 fetch + localStorage を手動構築する独自実装に統一 -->
+  <script>
+    const IDENTITY_BASE = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+
+    // hash から token を即取り出して保存（一度しかこの瞬間が存在しない）
+    const __hashInitial = location.hash || '';
+    const __inviteMatch = __hashInitial.match(/invite_token=([^&]+)/);
+    const __recoveryMatch = __hashInitial.match(/recovery_token=([^&]+)/);
+    const token = __inviteMatch ? __inviteMatch[1] : (__recoveryMatch ? __recoveryMatch[1] : null);
+    const isRecovery = !!__recoveryMatch;
+    try { localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/'); } catch (e) {}
+
+    // 既にログイン済みなら /post.html に直行
+    try {
+      const existing = JSON.parse(localStorage.getItem('gotrue.user') || 'null');
+      if (existing && existing.token && existing.token.access_token) {
+        location.replace('/post.html');
+      }
+    } catch (e) {}
+
+    if (!token) {
+      document.getElementById('noTokenView').style.display = 'block';
+    } else {
+      document.getElementById('formView').style.display = 'block';
+      document.getElementById('emailDisplay').textContent = '招待メールに記載のメールアドレス';
+    }
+
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('pw').value;
+      const btn = document.getElementById('submitBtn');
+      const alertBox = document.getElementById('alertBox');
+      btn.disabled = true;
+      btn.textContent = '設定中...';
+      alertBox.innerHTML = '';
+
+      try {
+        // Step 1: /verify でアカウント有効化
+        // - signup (invite_token): /verify で password 同時設定可能
+        // - recovery (recovery_token): /verify は token validate のみ、password は後で PUT /user で設定
+        const verifyBody = { type: isRecovery ? 'recovery' : 'signup', token: token };
+        if (!isRecovery) verifyBody.password = password;
+        const verifyRes = await fetch(IDENTITY_BASE + '/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(verifyBody)
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok) {
+          throw new Error(verifyData.msg || verifyData.error_description || JSON.stringify(verifyData));
+        }
+
+        // Step 1b: recovery の場合は PUT /user で password 設定
+        if (isRecovery) {
+          const updateRes = await fetch(IDENTITY_BASE + '/user', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + verifyData.access_token
+            },
+            body: JSON.stringify({ password: password })
+          });
+          if (!updateRes.ok) {
+            const errData = await updateRes.json();
+            throw new Error('パスワード更新失敗: ' + (errData.msg || JSON.stringify(errData)));
+          }
+        }
+
+        // Step 2: メールアドレス取得 + Step 3: localStorage を手動構築 (widget 不要)
+        const userRes = await fetch(IDENTITY_BASE + '/user', {
+          headers: { 'Authorization': 'Bearer ' + verifyData.access_token }
+        });
+        const user = await userRes.json();
+        document.getElementById('emailDisplay').textContent = user.email || '';
+
+        // gotrue-js 互換形式で localStorage 'gotrue.user' に保存
+        // post.html / login.html は access_token しか使わないので形式は緩めでOK
+        const session = {
+          url: IDENTITY_BASE,
+          token: {
+            access_token: verifyData.access_token,
+            refresh_token: verifyData.refresh_token,
+            expires_at: Date.now() + (verifyData.expires_in || 3600) * 1000,
+            token_type: verifyData.token_type || 'bearer'
+          },
+          id: user.id || '',
+          aud: user.aud || '',
+          role: user.role || '',
+          email: user.email || '',
+          confirmed_at: user.confirmed_at,
+          app_metadata: user.app_metadata || {},
+          user_metadata: user.user_metadata || {},
+          created_at: user.created_at,
+          updated_at: user.updated_at
+        };
+        localStorage.setItem('gotrue.user', JSON.stringify(session));
+
+        alertBox.innerHTML = '<div class="alert alert-success">✅ パスワード設定成功！管理画面に移動します...</div>';
+        setTimeout(() => { location.href = '/post.html'; }, 1200);
+      } catch (err) {
+        const msg = err && err.message ? err.message : String(err);
+        alertBox.innerHTML = '<div class="alert alert-error">エラー: ' + msg + '</div>';
+        btn.disabled = false;
+        btn.textContent = 'パスワードを設定して管理画面に進む';
+        console.error('signup error:', err);
+      }
+    });
+  </script>
+</body>
+</html>

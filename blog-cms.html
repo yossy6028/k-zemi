@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>ブログ管理 - Kゼミ 中野校</title>
+  <link rel="icon" href="/images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #1B5E20;
+      --primary-dark: #0D3311;
+      --primary-light: #E8F5E9;
+      --accent: #C9A227;
+      --text: #2D3748;
+      --text-light: #718096;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.7;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+      max-width: 560px;
+      width: 100%;
+      padding: 48px 40px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      color: var(--primary-dark);
+      font-weight: 900;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+    }
+    .subtitle {
+      color: var(--text-light);
+      font-size: 1rem;
+      margin-bottom: 36px;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.15rem;
+      padding: 20px 40px;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 24px rgba(27, 94, 32, 0.25);
+      letter-spacing: 0.05em;
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(27, 94, 32, 0.35);
+    }
+    .btn-primary::after {
+      content: " →";
+      font-weight: 700;
+    }
+    .help {
+      margin-top: 36px;
+      padding-top: 28px;
+      border-top: 1px solid #E2E8F0;
+      text-align: left;
+      font-size: 0.92rem;
+      color: var(--text-light);
+    }
+    .help h2 {
+      font-size: 0.95rem;
+      color: var(--primary-dark);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .help ol {
+      margin-left: 20px;
+    }
+    .help ol li {
+      margin-bottom: 8px;
+    }
+    .help code {
+      background: #F1F5F9;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: var(--primary-dark);
+      font-family: 'SFMono-Regular', Consolas, monospace;
+    }
+    .bookmark-tip {
+      margin-top: 24px;
+      background: #FFFBEB;
+      border-left: 4px solid var(--accent);
+      padding: 14px 16px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      text-align: left;
+      color: #92400E;
+    }
+    .bookmark-tip strong { color: #78350F; }
+    .footer {
+      margin-top: 28px;
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <span class="badge">塾長専用</span>
+    <h1>ブログ管理画面</h1>
+    <p class="subtitle">下のボタンから管理画面にアクセスできます</p>
+
+    <a href="/post.html" class="btn-primary">記事を投稿する</a>
+
+    <div class="bookmark-tip">
+      <strong>📌 ブックマーク推奨</strong><br>
+      このページをブックマーク（お気に入り）に追加しておくと、
+      次回からすぐにアクセスできます。
+    </div>
+
+    <div class="help">
+      <h2>うまく開けない場合</h2>
+      <ol>
+        <li>ブラウザを一度すべて閉じてから、もう一度開いてください</li>
+        <li>シークレット／プライベートウィンドウでお試しください
+          <ul style="margin: 4px 0 0 16px; list-style: disc;">
+            <li>Safari: <code>ファイル → 新規プライベートウインドウ</code></li>
+            <li>Chrome: <code>ファイル → シークレットウィンドウを開く</code></li>
+          </ul>
+        </li>
+        <li>それでもうまくいかない場合は、画面のスクリーンショットを
+          管理担当（吉井）までお送りください</li>
+      </ol>
+    </div>
+
+    <p class="footer">© Kゼミ 中野校</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="netlify-identity-host" content="https://effervescent-selkie-38a0aa.netlify.app">
+<script>
+  // 招待リンク / メール確認リンクは即座に /signup.html に転送
+  // 大規模な Kゼミトップ HTML 上では widget UI が描画されない問題の運用回避
+  (function(){
+    var hash = location.hash || '';
+    if (hash.indexOf('invite_token=') !== -1 ||
+        hash.indexOf('confirmation_token=') !== -1 ||
+        hash.indexOf('recovery_token=') !== -1) {
+      location.replace('/signup.html' + hash);
+    }
+  })();
+  // Identity Widget が外部ドメイン(k-zemi.net)で /.netlify/identity を見にいかないよう Netlify本体URLをSeed
+  try {
+    localStorage.setItem('netlifySiteURL', 'https://effervescent-selkie-38a0aa.netlify.app/');
+  } catch (e) {}
+  window.netlifyIdentityAPIUrl = 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity';
+</script>
+<title>個別指導塾 Kゼミ 中野校｜中野で30年、自ら解決する力を身に着ける個別指導塾</title>
+<meta name="description" content="中野駅南口徒歩5分、開校30年の個別指導塾Kゼミ。小学生から既卒生まで、内申点対策・高校受験・大学受験・補習・不登校サポートに対応。講師の平均年齢40歳の経験豊富な指導で、自ら解決する力を育てます。中学受験は姉妹校CAPと連携。">
+<meta name="keywords" content="個別指導塾,Kゼミ,中野,中野区,塾,中野駅,個別指導,高校受験,大学受験,中学受験,小学生,中学生,高校生,既卒生,内申対策,不登校サポート">
+<meta property="og:title" content="個別指導塾 Kゼミ 中野校｜中野で30年、自ら解決する力を身に着ける個別指導塾">
+<meta property="og:description" content="中野駅南口徒歩5分。開校30年・講師平均年齢40歳のベテラン個別指導塾。1対1/1対2の個別指導で、お子さん一人ひとりに合った学習方法を提案します。">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="https://k-zemi.net/">
+<meta property="og:site_name" content="個別指導塾 Kゼミ 中野校">
+<meta property="og:image" content="https://k-zemi.net/images/ogp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="678">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://k-zemi.net/">
+
+<!-- Favicon (SERP サイトアイコン用、絶対URL + 複数サイズで Google が拾いやすくする) -->
+<link rel="icon" href="https://k-zemi.net/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="https://k-zemi.net/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="https://k-zemi.net/images/favicon.png">
+<link rel="icon" type="image/png" sizes="96x96" href="https://k-zemi.net/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://k-zemi.net/images/favicon-192x192.png">
+<link rel="shortcut icon" type="image/png" href="https://k-zemi.net/images/favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://k-zemi.net/images/favicon-180x180.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="個別指導塾 Kゼミ 中野校｜中野で30年、自ら解決する力を身に着ける個別指導塾">
+<meta name="twitter:description" content="中野駅南口徒歩5分。開校30年・講師平均年齢40歳のベテラン個別指導塾。1対1/1対2の個別指導で、お子さん一人ひとりに合った学習方法を提案します。">
+<meta name="twitter:image" content="https://k-zemi.net/images/ogp.jpg">
+
+<!-- 構造化データ: EducationalOrganization (個別指導塾) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": [
+        "EducationalOrganization",
+        "LocalBusiness"
+      ],
+      "@id": "https://k-zemi.net/#organization",
+      "name": "個別指導塾 Kゼミ 中野校",
+      "alternateName": [
+        "Kゼミ",
+        "Kゼミ中野校"
+      ],
+      "url": "https://k-zemi.net/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://k-zemi.net/images/favicon-192x192.png",
+        "width": 192,
+        "height": 192
+      },
+      "image": "https://k-zemi.net/images/ogp.jpg",
+      "description": "中野駅南口徒歩5分、開校30年の個別指導塾Kゼミ中野校。小学生から既卒生まで、内申点対策・高校受験・大学受験・補習・不登校サポート・英検対策に対応。1対1および1対2の個別指導で、講師の平均年齢は40歳。",
+      "slogan": "中野で30年、自ら解決する力を身に着ける個別指導塾",
+      "telephone": "+81-3-3382-5707",
+      "priceRange": "3,000円〜5,200円（1コマ60分）",
+      "currenciesAccepted": "JPY",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "中野2-12-12 中野オクト勧業ビル2F",
+        "addressLocality": "中野区",
+        "addressRegion": "東京都",
+        "postalCode": "164-0001",
+        "addressCountry": "JP"
+      },
+      "hasMap": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E9%87%8E%E5%8C%BA%E4%B8%AD%E9%87%8E2-12-12+%E4%B8%AD%E9%87%8E%E3%82%AA%E3%82%AF%E3%83%88%E5%8B%A7%E6%A5%AD%E3%83%93%E3%83%AB2F",
+      "areaServed": [
+        {
+          "@type": "Place",
+          "name": "東京都中野区"
+        },
+        {
+          "@type": "Place",
+          "name": "中野駅周辺"
+        }
+      ],
+      "publicTransportationAccess": "JR中央線・総武線／東京メトロ東西線 中野駅 南口 徒歩5分",
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "opens": "16:00",
+          "closes": "20:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Saturday"
+          ],
+          "opens": "13:00",
+          "closes": "20:00"
+        }
+      ],
+      "audience": [
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "小学生"
+        },
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "中学生"
+        },
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "高校生"
+        },
+        {
+          "@type": "EducationalAudience",
+          "educationalRole": "student",
+          "audienceType": "既卒生"
+        }
+      ],
+      "knowsAbout": [
+        "個別指導",
+        "1対1個別指導",
+        "1対2個別指導",
+        "内申点対策",
+        "高校受験",
+        "大学受験",
+        "中学受験",
+        "英検対策",
+        "学習習慣の定着",
+        "補習",
+        "不登校サポート"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "授業料（1コマ60分）",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（通常）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "4900",
+            "eligibleCustomerType": "小学生・中学生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "4900",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（通常）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "5200",
+            "eligibleCustomerType": "高校生・既卒生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "5200",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（割引）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "4500",
+            "eligibleCustomerType": "小学生・中学生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "4500",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対1個別指導（割引）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "4800",
+            "eligibleCustomerType": "高校生・既卒生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "4800",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（通常）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "3400",
+            "eligibleCustomerType": "小学生・中学生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3400",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（通常）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "3900",
+            "eligibleCustomerType": "高校生・既卒生",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3900",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（割引）小学生・中学生",
+            "priceCurrency": "JPY",
+            "price": "3000",
+            "eligibleCustomerType": "小学生・中学生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3000",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          },
+          {
+            "@type": "Offer",
+            "name": "1対2個別指導（割引）高校生・既卒生",
+            "priceCurrency": "JPY",
+            "price": "3500",
+            "eligibleCustomerType": "高校生・既卒生（兄弟・CAP卒業生・継続通塾者）",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": "3500",
+              "priceCurrency": "JPY",
+              "unitText": "1コマ60分",
+              "referenceQuantity": {
+                "@type": "QuantitativeValue",
+                "value": 60,
+                "unitCode": "MIN"
+              }
+            },
+            "availability": "https://schema.org/InStock",
+            "url": "https://k-zemi.net/"
+          }
+        ]
+      },
+      "makesOffer": {
+        "@type": "Offer",
+        "name": "無料体験授業",
+        "price": "0",
+        "priceCurrency": "JPY",
+        "url": "https://k-zemi.net/",
+        "description": "入塾前に実際の個別指導を体験できる無料体験授業。HPの申込フォームまたは電話で申し込めます。"
+      },
+      "sameAs": [
+        "https://cap-juken.com/"
+      ],
+      "subOrganization": {
+        "@type": "EducationalOrganization",
+        "name": "中学受験専門 個別指導塾 CAP",
+        "url": "https://cap-juken.com/",
+        "description": "Kゼミの姉妹校。中学受験専門の個別指導塾で、CAPの元室長が指導にあたる。"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://k-zemi.net/#website",
+      "url": "https://k-zemi.net/",
+      "name": "個別指導塾 Kゼミ 中野校",
+      "inLanguage": "ja-JP",
+      "publisher": {
+        "@id": "https://k-zemi.net/#organization"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://k-zemi.net/#webpage",
+      "url": "https://k-zemi.net/",
+      "name": "個別指導塾 Kゼミ 中野校｜中野で30年、自ら解決する力を身に着ける個別指導塾",
+      "isPartOf": {
+        "@id": "https://k-zemi.net/#website"
+      },
+      "about": {
+        "@id": "https://k-zemi.net/#organization"
+      },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://k-zemi.net/images/ogp.jpg"
+      },
+      "inLanguage": "ja-JP",
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [
+          "h1",
+          "h2"
+        ]
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="preload" as="image" href="/images/hero.jpeg" fetchpriority="high">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,600&family=Klee+One:wght@400;600&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans JP',sans-serif;color:#2D3748;background:#fff;line-height:1.8;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit;text-decoration:none}
+ul{list-style:none}
+
+:root{
+  --primary:#1B5E20;
+  --primary-light:#E8F5E9;
+  --primary-dark:#0D3311;
+  --accent:#C9A227;
+  --accent-hover:#B0891C;
+  --text:#2D3748;
+  --text-light:#718096;
+  --bg:#fff;
+  --bg-alt:#F7FAFC;
+  --radius:16px;
+  --shadow:0 8px 32px rgba(0,0,0,0.08);
+  --shadow-lg:0 12px 48px rgba(0,0,0,0.12);
+  --container:min(1200px,90vw);
+}
+
+h1,h2,h3{font-family:'Noto Serif JP',serif;font-weight:800;line-height:1.4}
+.section-label{display:inline-block;font-family:'Noto Sans JP',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem}
+.section-title{font-size:clamp(1.8rem,4vw,2.6rem);color:var(--primary-dark);margin-bottom:1rem;font-weight:800}
+.section-title::after{content:'';display:block;width:60px;height:4px;background:var(--accent);margin:16px auto 0;border-radius:2px}
+.section-desc{font-size:1rem;color:var(--text-light);max-width:640px;margin:0 auto 2.5rem}
+.marker-yellow{background:linear-gradient(transparent 60%,rgba(201,162,39,0.30) 60%)}
+.marker-green{background:linear-gradient(transparent 60%,rgba(76,175,80,0.25) 60%)}
+
+/* Header 2-tier */
+.header{position:fixed;top:0;left:0;width:100%;z-index:1000;background:#fff;transition:box-shadow .3s}
+.header.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.08)}
+.header-top{border-bottom:3px solid var(--primary)}
+.header-inner{max-width:var(--container);margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:16px 5%}
+.header-logo{display:flex;flex-direction:column}
+.logo-sub{font-size:.7rem;color:#888;display:block;font-weight:500;letter-spacing:.05em}
+.logo-main{font-family:'Noto Serif JP',serif;font-size:1.6rem;font-weight:900;color:var(--primary);line-height:1.2}
+.header-phone{text-align:center}
+.header-phone a{font-size:1.8rem;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:.05em;display:block}
+.header-phone span{display:block;font-size:.75rem;color:#888}
+.header-cta-btn{background:var(--accent);color:#fff;padding:16px 32px;border-radius:60px;font-weight:700;font-size:.95rem;text-decoration:none;display:flex;align-items:center;gap:8px;white-space:nowrap;transition:background .2s,transform .2s;box-shadow:0 4px 16px rgba(201,162,39,.32)}
+.header-cta-btn:hover{background:var(--accent-hover);transform:translateY(-2px)}
+.main-nav{background:var(--primary);padding:0}
+.main-nav ul{display:flex;justify-content:center;list-style:none;margin:0;padding:0;max-width:var(--container);margin:0 auto}
+.main-nav a{color:#fff;padding:14px 28px;font-size:.88rem;font-weight:600;text-decoration:none;display:block;transition:background .2s;letter-spacing:.02em}
+.main-nav a:hover{background:rgba(255,255,255,.1)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;z-index:1001;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:24px;height:2px;background:var(--text);transition:transform .3s,opacity .3s}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+@media(max-width:900px){.header-phone{display:none}.header-cta-btn{padding:12px 20px;font-size:.85rem}}
+@media(max-width:768px){
+  .hamburger{display:flex}
+  .header-cta-btn{display:none}
+  .main-nav{position:fixed;top:0;right:-100%;width:280px;height:100vh;flex-direction:column;padding:5rem 0 2rem;box-shadow:-4px 0 20px rgba(0,0,0,.1);transition:right .3s ease;z-index:1000}
+  .main-nav.open{right:0}
+  .main-nav ul{flex-direction:column}
+  .main-nav a{padding:16px 28px;font-size:1rem}
+}
+
+/* Hero */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:65% 35%}
+@media(max-width:768px){.hero-bg img{object-position:62% 28%}}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg, rgba(13,51,17,0.84) 0%, rgba(27,94,32,0.78) 50%, rgba(13,51,17,0.74) 100%);z-index:1}
+.hero-content{position:relative;z-index:2;max-width:var(--container);margin:0 auto;padding:10rem 1.5rem 5rem;color:#fff}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);padding:.4rem 1.2rem;border-radius:50px;font-size:.85rem;font-weight:500;margin-bottom:1.5rem;letter-spacing:.05em}
+.hero-brand{font-family:'Noto Serif JP',serif;font-size:clamp(3.5rem,10vw,6rem);font-weight:900;line-height:1.1;margin-bottom:1rem;text-shadow:0 4px 30px rgba(0,0,0,.3)}
+.hero h1{font-size:clamp(1.2rem,3vw,1.8rem);font-weight:500;line-height:1.6;margin-bottom:1.5rem;opacity:.95}
+.hero-h1-accent{color:#A5D6A7}
+.hero-desc{font-size:clamp(.9rem,1.5vw,1.05rem);line-height:1.9;max-width:640px;opacity:.9;margin-bottom:2rem}
+.btn-primary{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;padding:1rem 2.5rem;border-radius:60px;font-weight:700;font-size:1.1rem;transition:background .2s,transform .2s,box-shadow .2s;box-shadow:0 4px 16px rgba(201,162,39,.42)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(201,162,39,.5)}
+.hero-stats{display:flex;gap:2.5rem;flex-wrap:wrap;margin-top:2rem}
+.stat-item{display:flex;flex-direction:column;align-items:center}
+.stat-num{font-family:'Noto Serif JP',serif;font-size:2rem;font-weight:900;color:#A5D6A7}
+.stat-label{font-size:.8rem;opacity:.8;margin-top:.2rem}
+
+/* Sections */
+section{padding:100px 1.5rem}
+.section-center{text-align:center}
+.container{max-width:var(--container);margin:0 auto}
+
+/* Watermark */
+.watermark{position:absolute;font-size:10rem;font-weight:900;opacity:.04;color:var(--primary);pointer-events:none;white-space:nowrap;font-family:'Noto Serif JP',serif;z-index:0}
+
+/* Features */
+.features{background:linear-gradient(180deg, #f0faf2 0%, #e0f5e4 100%);position:relative;overflow:hidden}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.feature-card{text-align:center;padding:40px 24px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);position:relative;transition:transform .3s}
+.feature-card:hover{transform:translateY(-8px)}
+.feature-label{font-size:.7rem;font-weight:700;letter-spacing:.2em;color:var(--accent);opacity:.6}
+.feature-num{font-family:'Noto Serif JP',serif;font-size:3rem;font-weight:900;color:var(--primary);opacity:.15;line-height:1}
+.feature-icon-circle{width:100px;height:100px;border-radius:50%;margin:16px auto;display:flex;align-items:center;justify-content:center;background:var(--primary-light);overflow:hidden}
+.feature-icon-circle svg{width:48px;height:48px;color:var(--primary)}
+.feature-title{font-size:1.05rem;font-weight:700;color:var(--primary-dark);margin-top:16px;line-height:1.5}
+.feature-desc{font-size:.9rem;color:var(--text-light);margin-top:8px;line-height:1.7}
+@media(max-width:768px){.features-grid{grid-template-columns:1fr}}
+
+/* About + image */
+.about-section{background:var(--bg-alt)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.about-img{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.about-img img{width:100%;height:auto;object-fit:cover}
+@media(max-width:768px){.about-grid{grid-template-columns:1fr}}
+
+/* Tuition */
+.tuition-table{width:100%;border-collapse:collapse;margin:2rem auto;max-width:700px}
+.tuition-table th,.tuition-table td{padding:16px 20px;text-align:center;border-bottom:1px solid #e2e8f0}
+.tuition-table th{background:var(--primary);color:#fff;font-weight:700;font-size:.9rem}
+.tuition-type{font-weight:600;text-align:left;color:var(--primary-dark)}
+.tuition-price{font-family:'Noto Serif JP',serif;font-size:1.1rem;font-weight:700;color:var(--primary)}
+.tuition-note{font-size:.85rem;color:var(--text-light);max-width:700px;margin:1.5rem auto 0;line-height:1.8}
+
+/* Timetable */
+.timetable-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;max-width:800px;margin:2rem auto}
+.time-slot{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.05);text-align:center;font-weight:600;font-size:1rem;border-left:4px solid var(--primary)}
+.time-badge{display:inline-block;background:var(--accent);color:#fff;font-size:.7rem;padding:2px 10px;border-radius:20px;margin-left:8px;font-weight:600}
+
+/* Instructor / narrative */
+.instructor-section{background:linear-gradient(180deg,#f6fbf7 0%,#eef7f1 100%);position:relative;overflow:hidden}
+.instructor-letter-wrap{max-width:760px;margin:0 auto;perspective:1200px}
+.instructor-letter{
+  position:relative;
+  background-image:linear-gradient(rgba(253,247,232,.72),rgba(253,247,232,.72)),url("/images/letter-bg.jpeg");
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  border-radius:6px;
+  padding:90px 90px 80px;
+  box-shadow:0 24px 72px rgba(60,40,20,.18),0 6px 24px rgba(60,40,20,.10),inset 0 0 60px rgba(120,90,40,.06);
+  transform:rotate(-.4deg);
+  transition:transform .4s ease;
+}
+.instructor-letter:hover{transform:rotate(0deg)}
+.instructor-letter::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(135deg,rgba(255,250,230,.12) 0%,transparent 50%,rgba(120,90,40,.05) 100%);
+  pointer-events:none;border-radius:6px;
+}
+.instructor-letter p{
+  font-family:'Klee One','Yu Mincho','YuMincho','Noto Serif JP',serif;
+  font-weight:400;
+  font-size:1.05rem;
+  line-height:2.3;
+  color:#3a2e1a;
+  margin-bottom:1.4rem;
+  text-align:left;
+  letter-spacing:.04em;
+  position:relative;
+  z-index:1;
+}
+.instructor-letter p:first-of-type{
+  text-indent:1em;
+}
+.instructor-letter p:last-of-type{margin-bottom:0}
+.instructor-letter strong{
+  font-family:'Klee One',serif;font-weight:600;color:#1a1208;
+}
+.instructor-letter .belief-accent{
+  font-family:'Klee One',serif;
+  font-size:1.6rem;
+  font-weight:600;
+  color:#5d3a1a;
+  text-align:center;
+  margin:2rem 0;
+  line-height:1.6;
+  letter-spacing:.08em;
+}
+.instructor-letter .marker-yellow{
+  background:linear-gradient(transparent 60%,rgba(201,162,39,.40) 60%);
+  padding:0 2px;
+}
+.instructor-letter .letter-signoff{
+  margin-top:2.5rem;
+  text-align:right;
+  font-family:'Klee One',serif;
+  font-weight:600;
+  font-size:1.15rem;
+  color:#3a2e1a;
+  line-height:1.8;
+}
+.instructor-letter .letter-signoff .signoff-name{
+  font-size:1.5rem;
+  display:inline-block;
+  margin-top:.4rem;
+  letter-spacing:.15em;
+}
+@media(max-width:768px){
+  .instructor-letter{
+    padding:44px 22px 38px;
+    transform:rotate(0deg);
+    background-size:100% 100%;
+  }
+  .instructor-letter p{font-size:.95rem;line-height:2.1}
+  .instructor-letter .belief-accent{font-size:1.3rem}
+}
+.instructor-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:48px;align-items:start}
+.instructor-photo{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg)}
+.instructor-photo img{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center 20%}
+.belief-accent{font-size:1.4rem;font-weight:800;color:var(--primary);text-align:center;margin:1.5rem 0;line-height:1.6}
+.instructor-profile{margin-top:2rem;padding:24px;background:rgba(255,255,255,.7);backdrop-filter:blur(10px);border-radius:12px;border:1px solid rgba(0,0,0,.05)}
+.instructor-profile h4{font-size:1.1rem;font-weight:700;color:var(--primary-dark);margin-bottom:8px}
+.instructor-profile p{font-size:.88rem;color:var(--text-light);line-height:1.8}
+@media(max-width:768px){.instructor-grid{grid-template-columns:1fr}}
+
+/* CAP section */
+.cap-section{background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);position:relative;overflow:hidden}
+.cap-card{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;background:#fff;border-radius:var(--radius);padding:48px;box-shadow:var(--shadow)}
+.cap-card img{width:100%;border-radius:12px}
+@media(max-width:768px){.cap-card{grid-template-columns:1fr;padding:24px}}
+
+/* Campaign banner */
+.campaign{background:linear-gradient(135deg,var(--accent),var(--accent-hover));padding:60px 1.5rem;text-align:center;color:#fff;position:relative;overflow:hidden}
+.campaign h2{font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;margin-bottom:1rem}
+.campaign p{font-size:1.05rem;opacity:.95;max-width:640px;margin:0 auto;line-height:1.8}
+.campaign-with-image{padding:64px 1.5rem}
+.campaign-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;text-align:left;max-width:1080px;margin:0 auto;position:relative;z-index:1}
+.campaign-grid .campaign-text h2{margin-bottom:1.2rem}
+.campaign-grid .campaign-text p{margin:0 0 1rem;max-width:none}
+.campaign-img{border-radius:var(--radius);overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.campaign-img img{width:100%;height:100%;object-fit:cover;display:block;aspect-ratio:4/3}
+@media(max-width:768px){.campaign-grid{grid-template-columns:1fr;text-align:center}.campaign-grid .campaign-text p{margin-left:auto;margin-right:auto}}
+
+/* Junior prep */
+.prep-section{background:#fff}
+.prep-card{background:var(--primary-light);border-radius:var(--radius);padding:48px;max-width:800px;margin:0 auto}
+.prep-card h3{font-size:1.3rem;color:var(--primary-dark);margin-bottom:1rem}
+.prep-subject{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:1.5rem 0}
+.prep-subject-card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+.prep-subject-card h4{color:var(--primary);font-size:1rem;margin-bottom:8px}
+.prep-price-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:1.5rem}
+.prep-price-item{background:#fff;padding:16px;border-radius:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.prep-price-item .label{font-size:.8rem;color:var(--text-light);margin-bottom:4px}
+.prep-price-item .price{font-family:'Noto Serif JP',serif;font-size:1.2rem;font-weight:700;color:var(--primary)}
+@media(max-width:768px){.prep-subject,.prep-price-grid{grid-template-columns:1fr}}
+
+/* Enrollment flow */
+.enrollment{background:var(--bg-alt)}
+.enroll-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative}
+.enroll-step{text-align:center;padding:40px 24px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);position:relative}
+.enroll-step-num{display:inline-block;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:8px 24px;border-radius:30px;font-size:.85rem;font-weight:700;margin-bottom:16px}
+.enroll-step-title{font-size:1.1rem;color:var(--primary-dark);margin-bottom:12px}
+.enroll-step-desc{font-size:.9rem;color:var(--text-light);line-height:1.7}
+@media(max-width:768px){.enroll-grid{grid-template-columns:1fr}}
+
+/* CTA */
+.cta-section{background:var(--primary);padding:80px 1.5rem;text-align:center;color:#fff}
+.cta-phone{font-family:'Noto Serif JP',serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:900;margin:1rem 0}
+.cta-phone a{color:#fff;text-decoration:none}
+.cta-hours{font-size:.9rem;opacity:.8;margin-bottom:2rem}
+
+/* Access */
+.access-section{background:#fff}
+.access-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.access-info{display:flex;flex-direction:column;gap:16px}
+.access-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #e2e8f0}
+.access-label{font-weight:700;color:var(--primary);min-width:80px;font-size:.9rem}
+.access-value{color:var(--text);font-size:.9rem}
+.access-map{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);min-height:350px}
+.access-map iframe{width:100%;height:350px;border:0}
+@media(max-width:768px){.access-grid{grid-template-columns:1fr}}
+
+/* Improvement */
+.improve-section{background:var(--bg-alt)}
+.improve-card{background:#fff;border-radius:var(--radius);padding:32px;margin-bottom:24px;box-shadow:var(--shadow)}
+.improve-title{font-size:1.1rem;color:var(--primary-dark);margin-bottom:16px}
+.improve-row{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.improve-before,.improve-after{padding:20px;border-radius:12px}
+.improve-before{background:#FEF2F2}
+.improve-after{background:#F0FFF4}
+.improve-label{display:inline-block;font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:8px}
+.improve-before .improve-label{background:#FCA5A5;color:#7F1D1D}
+.improve-after .improve-label{background:#86EFAC;color:#14532D}
+.improve-card p{font-size:.88rem;color:var(--text-light);line-height:1.7}
+@media(max-width:768px){.improve-row{grid-template-columns:1fr}}
+
+/* Banner strip */
+.banner-strip{background:#1B5E20;padding:28px 1.5rem;text-align:center;color:#fff;position:relative;overflow:hidden}
+.banner-strip p{font-family:'Cormorant Garamond',serif;font-size:clamp(1.2rem,3vw,1.8rem);font-style:italic;opacity:.9;letter-spacing:.05em}
+
+/* Footer */
+footer{background:var(--primary);color:#fff;padding:48px 1.5rem;text-align:center}
+footer p{font-size:.85rem;opacity:.6;margin-top:8px}
+
+/* Floating CTA */
+.floating-cta{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:12px}
+.floating-cta a{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.22);transition:transform .2s;text-decoration:none;font-size:1.2rem}
+.floating-cta a:hover{transform:scale(1.08)}
+.float-form{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff}
+
+/* Header tagline */
+.header-tagline{font-family:'Noto Serif JP',serif;font-size:.95rem;color:var(--primary-dark);font-weight:600;letter-spacing:.05em;align-self:center;padding:0 1.5rem;border-left:2px solid var(--primary-light);border-right:2px solid var(--primary-light);margin:0 auto}
+@media(max-width:768px){.header-tagline{display:none}}
+
+/* Contact Form */
+.contact-form-section{background:linear-gradient(180deg,#f6fbf7 0%,#e8f5e9 100%);padding:80px 1.5rem;position:relative;overflow:hidden}
+.contact-form{max-width:840px;margin:0 auto;background:#fff;border-radius:20px;padding:48px;box-shadow:0 12px 48px rgba(13,51,17,.08);border:1px solid rgba(27,94,32,.08)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.form-row{display:flex;flex-direction:column;gap:8px}
+.form-row-full{grid-column:1/-1}
+.form-row label{font-size:.92rem;font-weight:700;color:var(--primary-dark)}
+.form-row .required{color:#B91C1C;font-weight:800;margin-left:4px}
+.form-row input,.form-row select,.form-row textarea{font-family:'Noto Sans JP',sans-serif;font-size:.95rem;padding:14px 16px;border:1.5px solid #d4e8d8;border-radius:8px;background:#fafdfb;color:var(--text);transition:border-color .2s,background .2s}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(27,94,32,.08)}
+.form-row textarea{resize:vertical;min-height:120px;line-height:1.7}
+.form-row select{appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231B5E20' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+.form-checkbox{display:flex;align-items:center;gap:12px;font-weight:600;color:var(--text);cursor:pointer}
+.form-checkbox input{width:20px;height:20px;accent-color:var(--primary);cursor:pointer}
+.form-consent{padding:18px;background:#f0faf2;border-radius:8px;border-left:4px solid var(--primary)}
+.form-submit{padding:18px 56px;font-size:1.1rem}
+@media(max-width:768px){
+  .form-grid{grid-template-columns:1fr}
+  .contact-form{padding:32px 24px}
+}
+
+/* Scroll progress */
+.scroll-progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--primary));z-index:1001;width:0%;transition:width .1s}
+
+/* Animations */
+[data-animate]{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+[data-animate].visible{opacity:1;transform:translateY(0)}
+
+/* Netlify Identity widget: デフォルト z-index:99 がヘッダー(1000)等の背面に隠れるため上書き */
+.netlify-identity-widget,
+#netlify-identity-widget{z-index:99999 !important}
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Header 2-tier -->
+<header class="header" id="header">
+  <div class="header-top">
+    <div class="header-inner">
+      <div class="header-logo">
+        <span class="logo-sub">中野駅南口 徒歩5分 / 開校30年</span>
+        <span class="logo-main">個別指導塾 Kゼミ</span>
+      </div>
+      <div class="header-tagline">
+        <span>自ら解決する力を身に着ける</span>
+      </div>
+      <a href="#contact-form" class="header-cta-btn">無料体験授業に申し込む <span class="cta-arrow">&#10132;</span></a>
+      <button class="hamburger" id="hamburger" aria-label="メニュー"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <nav class="main-nav" id="mainNav">
+    <ul>
+      <li><a href="./blog/index.html">お知らせ・ブログ</a></li>
+      <li><a href="#features">特徴</a></li>
+      <li><a href="#tuition">料金</a></li>
+      <li><a href="#instructor">塾長あいさつ</a></li>
+      <li><a href="#cap">CAP</a></li>
+      <li><a href="#access">アクセス</a></li>
+      <li><a href="#contact-form">無料体験申込</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg">
+    <img src="/images/hero.jpeg" width="1200" height="900" fetchpriority="high" decoding="async" alt="学習風景">
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge">個別指導 1対1・1対2 / 小学生~既卒生</div>
+    <div class="hero-brand">Kゼミ</div>
+    <h1>中野で<span class='hero-h1-accent'>30年</span>、<br>自ら解決する力を身に着ける個別指導塾</h1>
+    <p class="hero-desc">小学生・中学生・高校生・既卒生を対象に、内申点対策・高校受験・大学受験・学習習慣の定着・補習・不登校サポート・英検対策など、生徒の希望に合わせて指導を行う1対1、および1対2の個別指導塾です。中野駅から徒歩5分の場所で、開校して30年。講師の平均年齢40歳。大学生の講師とは違った、長年の経験と安心感のある指導をお届けします。</p>
+    <a href="#contact-form" class="btn-primary">無料体験授業に申し込む &#10132;</a>
+    <div class="hero-stats">
+      <div class="stat-item"><span class="stat-num">30年+</span><span class="stat-label">指導実績</span></div>
+      <div class="stat-item"><span class="stat-num">1:1 / 1:2</span><span class="stat-label">個別指導</span></div>
+      <div class="stat-item"><span class="stat-num">40歳</span><span class="stat-label">講師平均年齢</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Banner -->
+<div class="banner-strip">
+  <p>Where Learning Blooms &mdash; Since 30 Years in Nakano</p>
+</div>
+
+<!-- Latest blog post -->
+<section class="latest-post-section" style="background:#fafaf7;padding:60px 20px;position:relative">
+  <div class="container" style="max-width:780px">
+    <p style="text-align:center;color:#1B5E20;font-size:.78rem;letter-spacing:.25em;margin-bottom:8px;font-weight:700">LATEST</p>
+    <h2 style="text-align:center;font-size:clamp(1.4rem,3vw,1.8rem);margin-bottom:28px;color:#0D3311;font-family:'Noto Serif JP',serif;font-weight:800">最新のお知らせ・ブログ</h2>
+    <!-- LATEST_POSTS_START -->
+    <!-- このマーカー間は build_blog.py が posts/ の最新3件で自動置換します。手で編集しないでください。 -->
+    <a href="./blog/2026-7-21-8-31/index.html" class="latest-post-card" style="display:block;background:#fff;border-radius:12px;padding:24px 28px;border-left:5px solid #C9A227;box-shadow:0 6px 24px rgba(0,0,0,.06);text-decoration:none;color:inherit;transition:transform .25s, box-shadow .25s;margin-bottom:14px">
+  <div style="font-size:.78rem;color:#C9A227;font-weight:700;letter-spacing:.05em;margin-bottom:8px">お知らせ ・ 2026年7月3日</div>
+  <h3 style="font-family:'Noto Serif JP',serif;font-size:clamp(1.05rem,2.4vw,1.2rem);line-height:1.55;font-weight:700;color:#0D3311;margin-bottom:10px">2026年度　夏期講習（7/21～8/31）のご案内</h3>
+  <span style="display:inline-block;color:#1B5E20;font-size:.9rem;font-weight:600">続きを読む &#10132;</span>
+</a>
+    <a href="./blog/post-2026-06-20/index.html" class="latest-post-card" style="display:block;background:#fff;border-radius:12px;padding:24px 28px;border-left:5px solid #C9A227;box-shadow:0 6px 24px rgba(0,0,0,.06);text-decoration:none;color:inherit;transition:transform .25s, box-shadow .25s;margin-bottom:14px">
+  <div style="font-size:.78rem;color:#C9A227;font-weight:700;letter-spacing:.05em;margin-bottom:8px">お知らせ ・ 2026年6月20日</div>
+  <h3 style="font-family:'Noto Serif JP',serif;font-size:clamp(1.05rem,2.4vw,1.2rem);line-height:1.55;font-weight:700;color:#0D3311;margin-bottom:10px">夏の期末テスト対策キャンペーン！</h3>
+  <span style="display:inline-block;color:#1B5E20;font-size:.9rem;font-weight:600">続きを読む &#10132;</span>
+</a>
+    <a href="./blog/post-2026-06-02/index.html" class="latest-post-card" style="display:block;background:#fff;border-radius:12px;padding:24px 28px;border-left:5px solid #C9A227;box-shadow:0 6px 24px rgba(0,0,0,.06);text-decoration:none;color:inherit;transition:transform .25s, box-shadow .25s;margin-bottom:14px">
+  <div style="font-size:.78rem;color:#C9A227;font-weight:700;letter-spacing:.05em;margin-bottom:8px">学習コラム ・ 2026年6月2日</div>
+  <h3 style="font-family:'Noto Serif JP',serif;font-size:clamp(1.05rem,2.4vw,1.2rem);line-height:1.55;font-weight:700;color:#0D3311;margin-bottom:10px">兄弟で理解力に差が出た趣味</h3>
+  <span style="display:inline-block;color:#1B5E20;font-size:.9rem;font-weight:600">続きを読む &#10132;</span>
+</a>
+    <!-- LATEST_POSTS_END -->
+    <div style="text-align:center;margin-top:22px"><a href="./blog/index.html" style="color:#1B5E20;text-decoration:underline;font-size:.95rem">お知らせ・ブログ一覧へ</a></div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+  <div class="watermark" style="top:-20px;left:-40px">FEATURE</div>
+  <div class="container section-center">
+    <div class="section-label">FEATURES</div>
+    <h2 class="section-title">Kゼミの特徴</h2>
+    <div class="features-grid">
+
+        <div class="feature-card" data-animate>
+          <div class="feature-label">FEATURE</div>
+          <div class="feature-num">1</div>
+          <div class="feature-icon-circle"><img src="/images/feature1-icon.jpeg" width="400" height="400" loading="lazy" decoding="async" alt="東京の中野で30年" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+          <h3 class="feature-title">東京の中野で30年</h3>
+          <p class="feature-desc">中野駅から徒歩5分の場所での長年の指導により、中野中・中野第二中・中野東中などの区立中や、大妻中野・明大中野・佼成学園・日大二中などの私立中高の指導に強い！</p>
+        </div>
+
+        <div class="feature-card" data-animate>
+          <div class="feature-label">FEATURE</div>
+          <div class="feature-num">2</div>
+          <div class="feature-icon-circle"><img src="/images/feature2-icon.jpeg" width="400" height="400" loading="lazy" decoding="async" alt="中学受験に強い" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+          <h3 class="feature-title">中学受験に強い</h3>
+          <p class="feature-desc">姉妹校の中学受験塾CAPとの長年の連携により、中学受験の指導、および他の集団塾の補講に強い！また中学受験後の私立中高の指導に柔軟に対応できる。</p>
+        </div>
+
+        <div class="feature-card" data-animate>
+          <div class="feature-label">FEATURE</div>
+          <div class="feature-num">3</div>
+          <div class="feature-icon-circle"><img src="/images/feature3-icon.jpeg" width="400" height="400" loading="lazy" decoding="async" alt="講師の平均年齢40歳" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+          <h3 class="feature-title">講師の平均年齢40歳</h3>
+          <p class="feature-desc">ご安心ください。勉強が上手くいかず悩んでいる生徒を、これまで何人も指導してきました。大学生の講師とは違った、長年の経験と安心感のある指導をお届けします。</p>
+        </div>
+    </div>
+  </div>
+</section>
+
+<!-- Campaign (Spring) with image right -->
+<section class="campaign campaign-with-image">
+  <div class="watermark" style="top:50%;left:50%;transform:translate(-50%,-50%);color:#fff">WELCOME</div>
+  <div class="container">
+    <div class="campaign-grid">
+      <div class="campaign-text">
+        <h2>新規入塾生募集中</h2>
+        <p>Kゼミでは、小学生・中学生・高校生・既卒生を対象に、年間を通して新規入塾生を募集しています。1対1・1対2の個別指導で、お子さん一人ひとりの学習状況とご希望に合わせたカリキュラムをご用意します。レベルチェックを兼ねた無料体験授業を随時実施中!</p>
+        <a href="#contact-form" class="btn-primary" style="margin-top:2rem;background:linear-gradient(135deg,#fff,#f0f0f0);color:var(--accent)">お申し込みはこちら &#10132;</a>
+      </div>
+      <div class="campaign-img">
+        <img src="/images/feature-img.jpeg" width="800" height="600" loading="lazy" decoding="async" alt="Kゼミの教室の様子">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tuition -->
+<section id="tuition" style="background:var(--bg-alt);position:relative;overflow:hidden">
+  <div class="watermark" style="top:-20px;right:-40px">TUITION</div>
+  <div class="container section-center">
+    <div class="section-label">TUITION</div>
+    <h2 class="section-title">授業料（1コマ60分）</h2>
+    <table class="tuition-table">
+      <thead><tr><th></th><th>小学生・中学生</th><th>高校生・既卒生</th></tr></thead>
+      <tbody>
+<tr><td class="tuition-type">1対1 通常</td><td class="tuition-price">4,900円</td><td class="tuition-price">5,200円</td></tr>
+<tr><td class="tuition-type">1対1 割引</td><td class="tuition-price">4,500円</td><td class="tuition-price">4,800円</td></tr>
+<tr><td class="tuition-type">1対2 通常</td><td class="tuition-price">3,400円</td><td class="tuition-price">3,900円</td></tr>
+<tr><td class="tuition-type">1対2 割引</td><td class="tuition-price">3,000円</td><td class="tuition-price">3,500円</td></tr>
+      </tbody>
+    </table>
+    <p class="tuition-note">割引対象者は、Kゼミに兄弟で通われている（過去に通っていた）生徒、CAPの卒業生に適用となる他、小学生から中学生、中学生から高校生と継続して通塾している生徒に適用されます。</p>
+  </div>
+</section>
+
+<!-- Timetable -->
+<section style="background:#fff;position:relative;overflow:hidden">
+  <div class="watermark" style="top:-20px;left:-40px">SCHEDULE</div>
+  <div class="container section-center">
+    <div class="section-label">SCHEDULE</div>
+    <h2 class="section-title">授業時間</h2>
+    <div class="timetable-grid">
+<div class="time-slot" data-animate><span class="time-text">13:00 ~ 14:00</span> <span class="time-badge">土曜のみ</span></div>
+<div class="time-slot" data-animate><span class="time-text">14:00 ~ 15:00</span> <span class="time-badge">土曜のみ</span></div>
+<div class="time-slot" data-animate><span class="time-text">15:00 ~ 16:00</span> <span class="time-badge">土曜のみ</span></div>
+<div class="time-slot" data-animate><span class="time-text">16:00 ~ 17:00</span></div>
+<div class="time-slot" data-animate><span class="time-text">17:00 ~ 18:00</span></div>
+<div class="time-slot" data-animate><span class="time-text">18:00 ~ 19:00</span></div>
+<div class="time-slot" data-animate><span class="time-text">19:00 ~ 20:00</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Banner -->
+<div class="banner-strip">
+  <p>Every Failure is a Step Toward Success</p>
+</div>
+
+<!-- Instructor / Narrative -->
+<section class="instructor-section" id="instructor">
+  <div class="watermark" style="top:-20px;right:-40px">BELIEF</div>
+  <div class="container">
+    <div class="section-label" style="text-align:center;display:block">OUR BELIEF</div>
+    <h2 class="section-title" style="text-align:center">塾長あいさつ</h2>
+    <div class="instructor-letter-wrap" style="margin-top:3rem">
+      <div class="instructor-letter">
+<p>昔、朝顔の花がなぜ朝になると開くのか、疑問に思った植物学者がいました。</p>
+<p>はじめは、朝になると太陽が昇るため、光に反応して花が開いていると仮定し、夕方、太陽が沈み暗くなった後、光を当ててみましたが開きません。他にも必要な要素がないかを考え、朝と同じ温度、湿度、明るさにしても駄目でした。1年ほど研究を続けた結果、花を開くために必要な要素がわかります。</p>
+<p class="belief-accent">それは、「<strong>夜の闇</strong>」</p>
+<p>夜の「<strong>暗い・寒い</strong>」という状態から、朝の「<strong>明るい・暖かい</strong>」という状態の変化を感じ取って花が開きます。言い方を変えれば、<span class="marker-yellow">夜の暗さと寒さを経験していない花にいくら光を当てても、花は開かない</span>ということです。</p>
+<p>人は成功すること、前進することなどのプラス面（光）に目を向けがちですが、失敗すること、立ち止まることなどのマイナス面（闇）も、成長や能力を開花させるには必要なことだと感じさせる、この朝顔の花の性質は、私を鼓舞してくれるエピソードであり、同時に私の教育理念でもあります。</p>
+<div class="letter-signoff">
+      ―― 個別指導塾Kゼミ 塾長<br>
+      <span class="signoff-name">日高 世樹</span>
+    </div>
+      </div>
+      <div class="instructor-profile" style="margin-top:32px">
+        <h4>日高 世樹</h4>
+        <p style="font-size:.85rem;color:var(--primary);margin-bottom:8px">個別指導塾Kゼミ 塾長</p>
+        <p>国立電気通信大学大学院卒。元Kゼミ運営統括マネージャー、2023年に株式会社志学から独立。コーチング技能取得（日本コーチ連盟）。シータヒーリング・プラクティショナー資格取得。趣味は、ゴスペル、読書（主に歴史・推理小説）、手相による気質判断。</p>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Contact Form -->
+<section class="contact-form-section" id="contact-form">
+  <div class="watermark" style="top:-20px;right:-40px">CONTACT</div>
+  <div class="container">
+    <div class="section-label" style="text-align:center;display:block">APPLICATION</div>
+    <h2 class="section-title" style="text-align:center">無料体験授業 お申込みフォーム</h2>
+    <p class="section-desc" style="text-align:center;max-width:680px;margin:0 auto 2.5rem">
+      下記フォームに必要事項をご記入のうえ、送信ください。<br>
+      担当よりメールにてご連絡を差し上げます。<span style="color:#B91C1C;font-weight:700">＊</span>は必須項目です。
+    </p>
+    <form class="contact-form" action="https://script.google.com/macros/s/AKfycbybbskYZE8zn-RWmgmye1NlVBSFqdp1P9Gsl6mxZypN3OWutHA7kRHxmnUDiDnOEBX2FQ/exec" method="POST">
+      <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="student_name">生徒氏名 <span class="required">＊</span></label>
+          <input id="student_name" name="生徒氏名" type="text" required maxlength="100" placeholder="例：山田 花子">
+        </div>
+        <div class="form-row">
+          <label for="parent_name">保護者氏名 <span class="required">＊</span></label>
+          <input id="parent_name" name="保護者氏名" type="text" required maxlength="100" placeholder="例：山田 太郎">
+        </div>
+        <div class="form-row">
+          <label for="grade">学年 <span class="required">＊</span></label>
+          <select id="grade" name="学年" required>
+            <option value="">選択してください</option>
+            <option>小学1年</option><option>小学2年</option><option>小学3年</option>
+            <option>小学4年</option><option>小学5年</option><option>小学6年</option>
+            <option>中学1年</option><option>中学2年</option><option>中学3年</option>
+            <option>高校1年</option><option>高校2年</option><option>高校3年</option>
+            <option>既卒・浪人生</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="school">学校名 <span class="required">＊</span></label>
+          <input id="school" name="学校名" type="text" required maxlength="100" placeholder="例：中野中学校">
+        </div>
+        <div class="form-row">
+          <label for="phone">電話番号 <span class="required">＊</span></label>
+          <input id="phone" name="電話番号" type="tel" required maxlength="20" placeholder="例：090-0000-0000">
+        </div>
+        <div class="form-row">
+          <label for="email">メールアドレス <span class="required">＊</span></label>
+          <input id="email" name="メールアドレス" type="email" required maxlength="254" placeholder="例：sample@example.com">
+        </div>
+        <div class="form-row form-row-full">
+          <label for="message">相談内容・ご質問</label>
+          <textarea id="message" name="相談内容・ご質問" rows="5" maxlength="1000" placeholder="お子さんの学習状況やお悩み、塾選びでご検討中のポイントなど、お気軽にご記入ください。"></textarea>
+        </div>
+        <div class="form-row form-row-full">
+          <label for="referrer">紹介者（ご紹介の場合）</label>
+          <input id="referrer" name="紹介者" type="text" maxlength="200" placeholder="例：CAP 細井先生のご紹介、Kゼミ卒業生の○○ など">
+        </div>
+        <div class="form-row form-row-full" style="text-align:center;margin-top:1rem">
+          <button type="submit" class="btn-primary form-submit">この内容で申し込む &#10132;</button>
+          <p style="margin-top:1rem;font-size:.85rem;color:var(--text-light)">送信後、3営業日以内に担当よりご連絡いたします。</p>
+        </div>
+        <div class="form-row form-row-full" id="form-fallback" role="alert" style="display:none;background:#FFF8E1;border:1px solid #C9A227;border-radius:12px;padding:20px 24px;text-align:center">
+          <p style="font-weight:700;color:#7A5C00;margin-bottom:.6rem">送信結果を確認できませんでした。</p>
+          <p style="font-size:.9rem;color:#5D4A00;margin-bottom:1rem">お手数ですが、下記のいずれかの方法でご連絡ください。ご入力いただいた内容はメールに引き継がれます。<br>（すでに送信されていた場合、重複してのご連絡となりますがご容赦ください）</p>
+          <a id="fallback-mailto" href="mailto:nakano@kzemi.com" class="btn-primary" style="font-size:.95rem;padding:.8rem 1.8rem">メールでこの内容を送る &#10132;</a>
+          <p style="margin-top:.9rem;font-size:.95rem;color:#5D4A00">お電話でも受け付けています：<a href="tel:03-3382-5707" style="font-weight:700;color:#1B5E20">03-3382-5707</a></p>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+<script>
+(function(){
+  var form = document.querySelector('.contact-form');
+  if(!form || !window.fetch || !window.AbortController) return;
+  var btn = form.querySelector('.form-submit');
+  var fallback = document.getElementById('form-fallback');
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    if(form.querySelector('input[name="_honey"]').value) return;
+    btn.disabled = true;
+    var original = btn.innerHTML;
+    btn.innerHTML = '送信中…';
+    // URLSearchParams（form-urlencoded）必須: GAS側は日本語フィールド名のため独自パーサーで受ける
+    var fd = new URLSearchParams(new FormData(form));
+    fd.set('_ajax', '1');
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, 12000);
+    fetch(form.action, {
+      method: 'POST',
+      body: fd,
+      signal: controller.signal
+    }).then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(data){
+      clearTimeout(timer);
+      // 送信システムは失敗時 success:"false" を返す
+      if(String(data.success) !== 'true') throw new Error('form backend rejected');
+      window.location.href = 'https://k-zemi.net/thanks.html';
+    }).catch(function(){
+      clearTimeout(timer);
+      btn.disabled = false;
+      btn.innerHTML = original;
+      var lines = [];
+      form.querySelectorAll('input,select,textarea').forEach(function(el){
+        if(el.name && el.name.charAt(0) !== '_' && el.value) lines.push(el.name + '：' + el.value);
+      });
+      var mail = document.getElementById('fallback-mailto');
+      mail.href = 'mailto:nakano@kzemi.com'
+        + '?subject=' + encodeURIComponent('【Kゼミ中野校】無料体験授業 お申込み')
+        + '&body=' + encodeURIComponent(lines.join('\n') + '\n\n（ホームページのフォームから送信できなかったため、メールでご連絡しています）');
+      fallback.style.display = 'block';
+      fallback.scrollIntoView({behavior:'smooth', block:'center'});
+      mail.focus({preventScroll:true});
+    });
+  });
+})();
+</script>
+
+<!-- CAP -->
+<section class="cap-section" id="cap">
+  <div class="watermark" style="top:-20px;left:-40px">CAP</div>
+  <div class="container">
+    <div class="section-label" style="text-align:center;display:block">PARTNER</div>
+    <h2 class="section-title" style="text-align:center">中学受験専門 個別指導塾 CAP</h2>
+    <div class="cap-card">
+      <img src="/images/cap-img.jpeg" width="800" height="284" loading="lazy" decoding="async" alt="CAP">
+      <div>
+        <h3 style="font-size:1.3rem;color:var(--primary-dark);margin-bottom:1rem">中学受験塾専門塾CAPの元室長が指導!</h3>
+        <p style="font-size:.95rem;line-height:1.9;color:var(--text)">個別指導塾Kゼミの教室内で、長年CAPの運営統括マネジャーとCAP中野校の室長を務めた細井が、1対1で指導を行います。他の中学受験塾の補習も行っております。</p>
+        <a href="https://cap-juken.com/" target="_blank" rel="noopener" style="display:inline-block;margin-top:1.5rem;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:12px 28px;border-radius:30px;font-weight:600;font-size:.9rem;box-shadow:0 4px 12px rgba(0,0,0,.15)">CAPの詳細を見る &#10132;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Access -->
+<section class="access-section" id="access">
+  <div class="container">
+    <div class="section-label" style="text-align:center;display:block">ACCESS</div>
+    <h2 class="section-title" style="text-align:center">アクセス</h2>
+    <div class="access-grid">
+      <div class="access-info">
+        <div class="access-row"><span class="access-label">所在地</span><span class="access-value">〒164-0001 東京都中野区中野2-12-12 中野オクト勧業ビル2F</span></div>
+        <div class="access-row"><span class="access-label">電話</span><span class="access-value"><a href="tel:03-3382-5707">03-3382-5707</a></span></div>
+        <div class="access-row"><span class="access-label">メール</span><span class="access-value"><a href="mailto:nakano@kzemi.com">nakano@kzemi.com</a></span></div>
+        <div class="access-row"><span class="access-label">アクセス</span><span class="access-value">中野駅南口より徒歩5分</span></div>
+      </div>
+      <div class="access-map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3239.5!2d139.665!3d35.707!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z5Lit6YeO5Yy65Lit6YeOIDItMTItMTI!5e0!3m2!1sja!2sjp!4v1" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <p style="font-family:'Noto Serif JP',serif;font-size:1.2rem;font-weight:700">個別指導塾 Kゼミ 中野校</p>
+    <p>〒164-0001 東京都中野区中野2-12-12 中野オクト勧業ビル2F</p>
+    <p>営業時間 13:00~20:00 / 日曜定休</p>
+    <p style="margin-top:1rem;font-size:.8rem;opacity:.4">&copy; 2026 個別指導塾 Kゼミ</p>
+  </div>
+</footer>
+
+<!-- Floating CTA -->
+<div class="floating-cta">
+  <a href="#contact-form" class="float-form" aria-label="無料体験を申し込む">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+  </a>
+</div>
+
+<script>
+// Scroll progress
+window.addEventListener('scroll',()=>{
+  const p=document.getElementById('scrollProgress');
+  const s=window.scrollY/(document.documentElement.scrollHeight-window.innerHeight)*100;
+  p.style.width=s+'%';
+});
+// Header scroll
+window.addEventListener('scroll',()=>{
+  document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
+});
+// Hamburger
+const hb=document.getElementById('hamburger'),nav=document.getElementById('mainNav');
+hb.addEventListener('click',()=>{hb.classList.toggle('open');nav.classList.toggle('open')});
+// Scroll animate
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}});
+},{threshold:0.1});
+document.querySelectorAll('[data-animate]').forEach(el=>obs.observe(el));
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+    if(nav.classList.contains('open')){nav.classList.remove('open');hb.classList.remove('open')}
+  });
+});
+</script>
+<!-- Netlify Identity widget: 招待リンク/メール確認リンクをルートで受け、/admin/ にリダイレクト
+     （トークン付きハッシュのときだけ読み込む。通常の訪問者には外部JSを配信しない） -->
+<script>
+(function(){
+  var hash = location.hash || '';
+  if (!/(invite_token|confirmation_token|recovery_token|email_change_token)=/.test(hash)) return;
+  var s = document.createElement('script');
+  s.src = 'https://identity.netlify.com/v1/netlify-identity-widget.js';
+  s.onload = function(){
+  if (window.netlifyIdentity) {
+      // ハンドラは init() より先に登録（順序を逆にすると init イベントを取りこぼす）
+      window.netlifyIdentity.on("init", user => {
+        if (!user) {
+          window.netlifyIdentity.on("login", () => {
+            document.location.href = "/admin/";
+          });
+        }
+        // hash に invite_token / confirmation_token / recovery_token があれば明示的にモーダルを開く
+        // 実機検証で auto-handling だけだと widget UI が描画されないケースを発見、明示 .open() が必要
+        var hash = location.hash;
+        if (hash.indexOf('invite_token=') !== -1 || hash.indexOf('confirmation_token=') !== -1 || hash.indexOf('recovery_token=') !== -1) {
+          window.netlifyIdentity.open();
+        }
+      });
+      window.netlifyIdentity.init({
+        APIUrl: 'https://effervescent-selkie-38a0aa.netlify.app/.netlify/identity'
+      });
+    }
+  };
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>
