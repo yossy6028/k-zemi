@@ -8,7 +8,7 @@
  * デプロイ: Web App / 実行ユーザー=自分 / アクセス=全員（匿名含む）
  */
 
-var DEST_EMAIL = 'nakano@kzemi.com';
+var DEST_EMAIL = 'kzemi.nakano@gmail.com'; // 2026-11-18 変更（旧: nakano@kzemi.com → 一時 i_am_tomcat@icloud.com）
 var SUBJECT = '【Kゼミ中野校】無料体験授業 お申込み';
 var THANKS_URL = 'https://k-zemi.net/thanks.html';
 var FIELD_ORDER = ['生徒氏名', '保護者氏名', '学年', '学校名', '電話番号', 'メールアドレス', '相談内容・ご質問', '紹介者'];
@@ -342,7 +342,7 @@ function healthCheck() {
   MailApp.sendEmail(ADMIN_EMAIL, '【要確認】Kゼミ問合せフォーム ヘルスチェック異常',
     'Kゼミ問合せフォームの定期チェック（6時間毎）で異常を検知しました。\n\n' +
     problems.map(function (s) { return '・' + s; }).join('\n') +
-    '\n\n確認手順: https://k-zemi.net/ のフォームからテスト送信 → 台帳とnakano@kzemi.comへの着信を確認。' +
+    '\n\n確認手順: https://k-zemi.net/ のフォームからテスト送信 → 台帳とkzemi.nakano@gmail.comへの着信を確認。' +
     '\nスクリプト: https://script.google.com/d/1I69zIFJUZDH9Z2UCI9IyGj_y17qZWuVQcEozVjV-NeZfh8_WeHvP7yFH/edit');
 
   // 送信が成功した後にだけラッチを立てる（先に立てると送信失敗時に12時間無音になる）
