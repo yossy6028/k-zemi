@@ -714,7 +714,9 @@ section{padding:100px 1.5rem}
 .faq-section{background:var(--bg-alt)}
 .faq-list{max-width:800px;margin:0 auto}
 .faq-item{background:#fff;border-radius:8px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.faq-item summary{cursor:pointer;padding:18px 20px;font-weight:700;color:var(--primary-dark);list-style:none}
+.faq-item summary{cursor:pointer;padding:18px 48px 18px 20px;font-weight:700;color:var(--primary-dark);list-style:none;position:relative}
+.faq-item summary::after{content:'＋';position:absolute;right:20px;top:18px;color:var(--accent)}
+.faq-item[open] summary::after{content:'－'}
 .faq-item summary::-webkit-details-marker{display:none}
 .faq-item summary::before{content:'Q. ';color:var(--accent)}
 .faq-item p{padding:0 20px 18px;margin:0;line-height:1.8}
