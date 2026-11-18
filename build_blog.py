@@ -11,7 +11,7 @@ IMG_DIR_LOCAL = os.path.join(BASE, "images")
 IMG_DIR_GLOBAL = os.path.expanduser("~/edushift-hp-builder/assets/kzemi")
 
 SCHOOL_NAME = "個別指導塾 Kゼミ"
-EMAIL = "nakano@kzemi.com"
+EMAIL = "kzemi.nakano@gmail.com"
 ADDRESS = "〒164-0001 東京都中野区中野2-12-12 中野オクト勧業ビル2F"
 
 V = {
